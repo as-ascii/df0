@@ -25,12 +25,12 @@ namespace openrouter {
 
 class DOCWIRE_OPENROUTER_EXPORT summarize : public chat {
 public:
-  summarize(const std::set<std::string> &categories, const std::string &api_key,
+  summarize(const std::string &api_key,
             const std::string &model = "openrouter/auto", float temperature = 0,
             image_detail image_detail = image_detail::automatic)
       : chat("Your task is to summarize every message.", api_key, model,
              temperature, image_detail) {
-    DOCWIRE_LOG_SCOPE(categories, model, temperature, image_detail);
+    DOCWIRE_LOG_SCOPE(model, temperature, image_detail);
   }
 };
 
