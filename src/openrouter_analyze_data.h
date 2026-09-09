@@ -13,19 +13,19 @@
 #define DOCWIRE_OPENROUTER_ANALYZE_DATA_H
 
 #include "log_scope.h"
-#include "openrouter_chat.h"
+#include "openrouter_task.h"
 #include "serialization_enum.h" // IWYU pragma: keep
 #include <string>
 namespace docwire {
 namespace openrouter {
 
-class DOCWIRE_OPENROUTER_EXPORT analyze_data : public chat {
+class DOCWIRE_OPENROUTER_EXPORT analyze_data : public task {
 public:
   analyze_data(const std::string &api_key,
                const std::string &model = "openrouter/auto",
                float temperature = 0,
                image_detail image_detail = image_detail::automatic)
-      : chat("Your task is analyze data in every message and create a summary "
+      : task("Your task is analyze data in every message and create a summary "
              "highlighting the most important insights, trends, key patterns, "
              "statistics, findings and other revelant information. Include "
              "conclusions that are usually made for type of data you will find "

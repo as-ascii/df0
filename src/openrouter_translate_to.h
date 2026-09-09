@@ -13,19 +13,19 @@
 #define DOCWIRE_OPENROUTER_TRANSLATE_TO_H
 
 #include "log_scope.h"
-#include "openrouter_chat.h"
+#include "openrouter_task.h"
 #include "serialization_enum.h" // IWYU pragma: keep
 #include <string>
 namespace docwire {
 namespace openrouter {
 
-class DOCWIRE_OPENROUTER_EXPORT translate_to : public chat {
+class DOCWIRE_OPENROUTER_EXPORT translate_to : public task {
 public:
   translate_to(const std::string &language, const std::string &api_key,
                const std::string &model = "openrouter/auto",
                float temperature = 0,
                image_detail image_detail = image_detail::automatic)
-      : chat("Your task is to translate every message to " + language +
+      : task("Your task is to translate every message to " + language +
                  " language.",
              api_key, model, temperature, image_detail) {
     DOCWIRE_LOG_SCOPE(model, temperature, image_detail);

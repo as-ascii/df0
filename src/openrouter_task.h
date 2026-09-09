@@ -9,8 +9,8 @@
 /*  SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-DocWire-Commercial                                                                  */
 /*********************************************************************************************************************************************/
 
-#ifndef DOCWIRE_OPENROUTER_CHAT_H
-#define DOCWIRE_OPENROUTER_CHAT_H
+#ifndef DOCWIRE_OPENROUTER_TASK_H
+#define DOCWIRE_OPENROUTER_TASK_H
 
 #include "chain_element.h"
 #include "openrouter_export.h"
@@ -26,8 +26,8 @@ enum class image_detail { low, high, automatic };
  * single API that routes requests to hundreds of models across many providers
  * (OpenAI, Anthropic, Google, Meta, Mistral, DeepSeek, and more).
  */
-class DOCWIRE_OPENROUTER_EXPORT chat : public chain_element,
-                                       public with_pimpl<chat> {
+class DOCWIRE_OPENROUTER_EXPORT task : public chain_element,
+                                       public with_pimpl<task> {
 public:
   /**
    * @param system_message System prompt sent with every request.
@@ -40,7 +40,7 @@ public:
    * @param image_detail Vision hint forwarded to models that support image
    * input.
    */
-  chat(const std::string &system_message, const std::string &api_key,
+  task(const std::string &system_message, const std::string &api_key,
        const std::string &model = "openrouter/auto", float temperature = 0.5,
        image_detail image_detail = image_detail::automatic);
 
@@ -57,10 +57,10 @@ public:
   bool is_leaf() const override { return false; }
 
 private:
-  using with_pimpl<chat>::impl;
+  using with_pimpl<task>::impl;
 };
 
 } // namespace openrouter
 } // namespace docwire
 
-#endif // DOCWIRE_OPENROUTER_CHAT_H
+#endif // DOCWIRE_OPENROUTER_TASK_H

@@ -9,7 +9,7 @@
 /*  SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-DocWire-Commercial                                                                  */
 /*********************************************************************************************************************************************/
 
-#include "openrouter_chat.h"
+#include "openrouter_task.h"
 
 #include "base64.h"
 #include "error_tags.h"
@@ -28,7 +28,7 @@ namespace docwire {
 
 using namespace openrouter;
 
-template <> struct pimpl_impl<openrouter::chat> : pimpl_impl_base {
+template <> struct pimpl_impl<openrouter::task> : pimpl_impl_base {
   pimpl_impl(const std::string &system_message, const std::string &api_key,
              const std::string &model, float temperature,
              image_detail image_detail)
@@ -46,10 +46,10 @@ template <> struct pimpl_impl<openrouter::chat> : pimpl_impl_base {
 namespace docwire {
 namespace openrouter {
 
-chat::chat(const std::string &system_message, const std::string &api_key,
+task::task(const std::string &system_message, const std::string &api_key,
            const std::string &model, float temperature,
            image_detail image_detail)
-    : with_pimpl<chat>(system_message, api_key, model, temperature,
+    : with_pimpl<task>(system_message, api_key, model, temperature,
                        image_detail) {
   log_scope(system_message, model, temperature, image_detail);
 }
@@ -135,7 +135,7 @@ std::string parse_response(const std::string &response) {
 
 } // anonymous namespace
 
-continuation chat::operator()(message_ptr msg,
+continuation task::operator()(message_ptr msg,
                               const message_callbacks &emit_message) {
   log_scope(msg);
   if (!msg->is<data_source>())

@@ -1,5 +1,5 @@
 add_library(docwire_openrouter SHARED
-    openrouter_chat.cpp)
+    openrouter_task.cpp)
 
 find_package(Boost REQUIRED COMPONENTS json)
 target_link_libraries(docwire_openrouter PRIVATE docwire_base64 docwire_core docwire_ai docwire_http Boost::json)

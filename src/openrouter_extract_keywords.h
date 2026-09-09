@@ -16,19 +16,19 @@
 #define DOCWIRE_OPENROUTER_EXTRACT_KEYWORDS_H
 
 #include "log_scope.h"
-#include "openrouter_chat.h"
+#include "openrouter_task.h"
 #include "serialization_enum.h" // IWYU pragma: keep
 #include <string>
 namespace docwire {
 namespace openrouter {
 
-class DOCWIRE_OPENROUTER_EXPORT extract_keywords : public chat {
+class DOCWIRE_OPENROUTER_EXPORT extract_keywords : public task {
 public:
   extract_keywords(unsigned int max_keywords, const std::string &api_key,
                    const std::string &model = "openrouter/auto",
                    float temperature = 0,
                    image_detail image_detail = image_detail::automatic)
-      : chat("Your task is to identify and extract " +
+      : task("Your task is to identify and extract " +
                  std::to_string(max_keywords) +
                  " most important keywords or key phrases from every message. "
                  "The goal is to capture the most relevant and significant "

@@ -17,7 +17,7 @@
 
 #include "boost/algorithm/string/join.hpp"
 #include "log_scope.h"
-#include "openrouter_chat.h"
+#include "openrouter_task.h"
 #include "serialization_enum.h" // IWYU pragma: keep
 #include <set>
 #include <string>
@@ -25,12 +25,12 @@
 namespace docwire {
 namespace openrouter {
 
-class DOCWIRE_OPENROUTER_EXPORT classify : public chat {
+class DOCWIRE_OPENROUTER_EXPORT classify : public task {
 public:
   classify(const std::set<std::string> &categories, const std::string &api_key,
            const std::string &model = "openrouter/auto", float temperature = 0,
            image_detail image_detail = image_detail::automatic)
-      : chat("Your task is to classify every message to one of the following "
+      : task("Your task is to classify every message to one of the following "
              "categories: " +
                  boost::algorithm::join(categories, ", ") +
                  ". Answer with the category name only, exactly as it was "

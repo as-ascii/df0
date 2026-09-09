@@ -16,18 +16,18 @@
 #define DOCWIRE_OPENROUTER_DETECT_SENTIMENT_H
 
 #include "log_scope.h"
-#include "openrouter_chat.h"
+#include "openrouter_task.h"
 #include "serialization_enum.h" // IWYU pragma: keep
 namespace docwire {
 namespace openrouter {
 
-class DOCWIRE_OPENROUTER_EXPORT detect_sentiment : public chat {
+class DOCWIRE_OPENROUTER_EXPORT detect_sentiment : public task {
 public:
   detect_sentiment(const std::string &api_key,
                    const std::string &model = "openrouter/auto",
                    float temperature = 0,
                    image_detail image_detail = image_detail::automatic)
-      : chat("Your task is to detect sentiment for every message", api_key,
+      : task("Your task is to detect sentiment for every message", api_key,
              model, temperature, image_detail) {
     DOCWIRE_LOG_SCOPE(model, temperature, image_detail);
   }

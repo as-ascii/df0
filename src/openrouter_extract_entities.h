@@ -16,19 +16,19 @@
 #define DOCWIRE_OPENROUTER_EXTRACT_ENTITIES_H
 
 #include "log_scope.h"
-#include "openrouter_chat.h"
+#include "openrouter_task.h"
 #include "serialization_enum.h" // IWYU pragma: keep
 #include <string>
 namespace docwire {
 namespace openrouter {
 
-class DOCWIRE_OPENROUTER_EXPORT extract_entities : public chat {
+class DOCWIRE_OPENROUTER_EXPORT extract_entities : public task {
 public:
   extract_entities(const std::string &api_key,
                    const std::string &model = "openrouter/auto",
                    float temperature = 0,
                    image_detail image_detail = image_detail::automatic)
-      : chat(
+      : task(
             "Your task is to find all dates, timespans, addresses, companies "
             "and person names inside every message. Show it as formatted list.",
             api_key, model, temperature, image_detail) {
