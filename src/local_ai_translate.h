@@ -13,12 +13,12 @@
 #define DOCWIRE_LOCAL_AI_TRANSLATE_H
 
 #include "ai_translate.h"
-#include "local_ai_export.h"
 
-namespace docwire::ai::local
-{
+namespace docwire::ai::local {
 
-class DOCWIRE_LOCAL_AI_EXPORT translate : public docwire::ai::translate
+class translate
+    : public docwire::pipeline::transformer_element<translate>
+    , public docwire::ai::translate
 {
   public:
  	translate(const std::string& language);

@@ -15,6 +15,17 @@ add_executable(docwire_tests
 	http_tests.cpp
 	data_source_tests.cpp
 	xml_tests.cpp
+	resource_path_tests.cpp
+	static_flat_map_tests.cpp
+	json_serialization_tests.cpp
+	type_name_tests.cpp
+	log_filter_tests.cpp
+	iconv_wrapper_tests.cpp
+	minizip_wrapper_tests.cpp
+	odr_smoke_test.cpp
+	odr_smoke_test_b.cpp
+	type_id_tests.cpp
+	pipeline_tests.cpp
 )
 
 target_link_libraries(docwire_tests PRIVATE
@@ -209,20 +220,32 @@ set(common_examples
     xml_parsing_example
 )
 
-set(local_ai_examples
+set(local_ai_ct2_examples
     local_embedding_similarity
-    local_ai_classify
-    local_ai_translate
-    local_ai_sentiment
-    local_ai_summary
-    local_ai_find
+    local_ai_ct2_classify
+    local_ai_ct2_translate
+    local_ai_ct2_sentiment
+    local_ai_ct2_summary
+    local_ai_ct2_find
+)
+
+set(local_ai_llama_examples
+	local_ai_llama_classify
+	local_ai_llama_translate
+    local_ai_llama_sentiment
+    local_ai_llama_summary
+    local_ai_llama_find
 )
 
 # Merge lists conditionally
 set(all_examples ${common_examples})
 
 if(TARGET docwire_ai_ct2)
-    list(APPEND all_examples ${local_ai_examples})
+    list(APPEND all_examples ${local_ai_ct2_examples})
+endif()
+
+if(TARGET docwire_ai_llama)
+	list(APPEND all_examples ${local_ai_llama_examples})
 endif()
 
 foreach(example IN LISTS all_examples)
