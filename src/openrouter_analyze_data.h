@@ -12,26 +12,41 @@
 #ifndef DOCWIRE_OPENROUTER_ANALYZE_DATA_H
 #define DOCWIRE_OPENROUTER_ANALYZE_DATA_H
 
-#include "log_scope.h"
+#include "audit/auditor_ref.hpp"
+#include "audit/scope.hpp"
+#include "named.h"
 #include "openrouter_task.h"
 #include "serialization_enum.h" // IWYU pragma: keep
 #include <string>
+
 namespace docwire {
 namespace openrouter {
 
-class DOCWIRE_OPENROUTER_EXPORT analyze_data : public task {
+template <typename auditor_type = audit::null_auditor>
+class analyze_data : public task<auditor_type> {
 public:
-  	explicit analyze_data(const std::string &api_key,
-               const std::string &model = "openrouter/auto",
-               float temperature = 0,
-               image_detail image_detail = image_detail::automatic)
-      : task("Your task is analyze data in every message and create a summary "
-             "highlighting the most important insights, trends, key patterns, "
-             "statistics, findings and other revelant information. Include "
-             "conclusions that are usually made for type of data you will find "
-             "in message.",
-             api_key, model, temperature, image_detail) {
-    DOCWIRE_LOG_SCOPE(model, temperature, image_detail);
+  template <audit::stateless_auditor stateless_auditor_type = auditor_type>
+  explicit analyze_data(const std::string &api_key,
+                        const std::string &model = "openrouter/auto",
+                        float temperature = 0,
+                        image_detail image_detail = image_detail::automatic)
+      : analyze_data(api_key, model, temperature, image_detail,
+                     audit::auditor_ref<stateless_auditor_type>{}) {}
+
+  explicit analyze_data(const std::string &api_key, const std::string &model,
+                        float temperature, image_detail image_detail,
+                        audit::auditor_ref<auditor_type> auditor)
+      : task<auditor_type>(
+            "Your task is analyze data in every message and create a summary "
+            "highlighting the most important insights, trends, key patterns, "
+            "statistics, findings and other revelant information. Include "
+            "conclusions that are usually made for type of data you will find "
+            "in message.",
+            api_key, model, temperature, image_detail, auditor) {
+    audit::scope audit_scope{this->auditor(), [&] {
+      return "model"_v = model, "temperature"_v = temperature,
+             "image_detail"_v = image_detail;
+    }};
   }
 };
 

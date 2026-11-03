@@ -9,17 +9,19 @@
 /*  SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-DocWire-Commercial                                                                  */
 /*********************************************************************************************************************************************/
 
-
 #ifndef DOCWIRE_OPENROUTER_TRANSCRIBE_H
 #define DOCWIRE_OPENROUTER_TRANSCRIBE_H
 
+#include "audit/auditor_ref.hpp"
+#include "audit/entry.hpp"
+#include "audit/scope.hpp"
+#include "audit/with_auditor.hpp"
 #include "base64.h"
 #include "data_source.h"
 #include "document_elements.h"
 #include "error_tags.h"
-#include "log_entry.h"
-#include "log_scope.h"
 #include "make_error.h"
+#include "named.h"
 #include "pipeline/element_base.hpp"
 #include "pipeline/input_element.hpp"
 #include "pipeline/output_element.hpp"
@@ -43,29 +45,42 @@ inline constexpr std::string_view mai_transcribe_1_5 =
 inline constexpr std::string_view grok_stt_1_0 = "x-ai/grok-stt-1.0";
 } // namespace transcribe_model
 
-class transcribe : public pipeline::transformer_element<transcribe> {
+template <typename auditor_type = audit::null_auditor>
+class transcribe
+    : public pipeline::transformer_element<transcribe<auditor_type>>,
+      private audit::with_auditor<auditor_type> {
 public:
   /**
-   * @param api_key OpenRouter API key.
-   * @param model. Defaults to model -> `whisper_large_v3
-   * (openai/whisper-large-v3)`.
+   * Available only for stateless (default-constructible) auditors.
+   * @param api_key OpenRouter API key. Never written to audit output.
+   * @param model Defaults to `whisper_large_v3 (openai/whisper-large-v3)`.
    * @param language Optional ISO-639-1 code (e.g. "en"); empty = auto-detect.
    */
+  template <audit::stateless_auditor stateless_auditor_type = auditor_type>
   explicit transcribe(
       std::string api_key,
       std::string model = std::string{transcribe_model::whisper_large_v3},
       std::string language = "")
-      : m_api_key(std::move(api_key)), m_model(std::move(model)),
+      : transcribe(std::move(api_key), std::move(model), std::move(language),
+                   audit::auditor_ref<stateless_auditor_type>{}) {}
+
+  explicit transcribe(std::string api_key, std::string model,
+                      std::string language,
+                      audit::auditor_ref<auditor_type> auditor)
+      : audit::with_auditor<auditor_type>(auditor),
+        m_api_key(std::move(api_key)), m_model(std::move(model)),
         m_language(std::move(language)) {
-    log_scope(m_model, m_language);
+    audit::scope audit_scope{this->auditor(), [&] {
+      return "model"_v = m_model, "language"_v = m_language;
+    }};
   }
 
   continuation operator()(message_ptr msg,
                           const message_callbacks &emit_message) {
-    log_scope();
+    audit::scope transcribe_audit_scope{this->auditor(), audit::no_context};
     if (!msg->is<data_source>())
       return emit_message(std::move(msg));
-    log_entry();
+    audit::entry(this->auditor(), audit::no_context);
     const data_source &data = msg->get<data_source>();
 
     std::string text = parse_response(post_request(
@@ -79,6 +94,9 @@ public:
       return cont;
     return emit_message(document::close_document{});
   }
+
+protected:
+  using audit::with_auditor<auditor_type>::auditor;
 
 private:
   static std::string audio_format(const data_source &data) {
@@ -115,21 +133,22 @@ private:
   }
 
   std::string post_request(const std::string &query) const {
+    audit::scope audit_scope{this->auditor(), audit::no_context};
     std::ostringstream response_stream{};
     try {
       data_source{query, mime_type{"application/json"}, confidence::highest} |
-          http::post("https://openrouter.ai/api/v1/audio/transcriptions",
-                     m_api_key) |
+          http::post<auditor_type>(
+              "https://openrouter.ai/api/v1/audio/transcriptions", m_api_key,
+              http::ssl_verify_peer{true}, this->auditor()) |
           response_stream;
     } catch (const std::exception &) {
-      // the query is deliberately not attached: it holds the whole base64 audio
       std::throw_with_nested(make_error("Error during transcription"));
     }
     return response_stream.str();
   }
 
-  static std::string parse_response(const std::string &response) {
-    log_scope();
+  std::string parse_response(const std::string &response) const {
+    audit::scope audit_scope{this->auditor(), audit::no_context};
     try {
       boost::json::object obj = boost::json::parse(response).as_object();
       if (obj.contains("error")) {

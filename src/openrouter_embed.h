@@ -1,27 +1,27 @@
 /*********************************************************************************************************************************************/
-/*  DocWire SDK: Award-winning modern data processing in C++20. SourceForge
- * Community Choice & Microsoft support. AI-driven processing.      */
-/*  Supports nearly 100 data formats, including email boxes and OCR. Boost
- * efficiency in text extraction, web data extraction, data mining,  */
-/*  document analysis. Offline processing possible for security and
- * confidentiality                                                          */
+/*  DocWire SDK: Award-winning modern data processing in C++20. SourceForge Community Choice & Microsoft support. AI-driven processing.      */
+/*  Supports nearly 100 data formats, including email boxes and OCR. Boost efficiency in text extraction, web data extraction, data mining,  */
+/*  document analysis. Offline processing possible for security and confidentiality                                                          */
 /*                                                                                                                                           */
-/*  Copyright (c) SILVERCODERS Ltd, http://silvercoders.com */
-/*  Project homepage: https://github.com/docwire/docwire */
+/*  Copyright (c) SILVERCODERS Ltd, http://silvercoders.com                                                                                  */
+/*  Project homepage: https://github.com/docwire/docwire                                                                                     */
 /*                                                                                                                                           */
-/*  SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-DocWire-Commercial */
+/*  SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-DocWire-Commercial                                                                  */
 /*********************************************************************************************************************************************/
 
 #ifndef DOCWIRE_OPENROUTER_EMBED_H
 #define DOCWIRE_OPENROUTER_EMBED_H
 
 #include "ai_elements.h"
-#include "pipeline/element_base.hpp"
+#include "audit/auditor_ref.hpp"
+#include "audit/entry.hpp"
+#include "audit/scope.hpp"
+#include "audit/with_auditor.hpp"
 #include "error_tags.h"
-#include "pipeline/input_element.hpp"
-#include "log_scope.h"
 #include "make_error.h"
-#include "openrouter_export.h"
+#include "named.h"
+#include "pipeline/element_base.hpp"
+#include "pipeline/input_element.hpp"
 #include "pipeline/output_element.hpp"
 #include "post.h"
 #include "serialization_message.h" // IWYU pragma: keep
@@ -33,17 +33,29 @@
 
 namespace docwire {
 namespace openrouter {
-class DOCWIRE_OPENROUTER_EXPORT embed : public pipeline::transformer_element<embed> {
+
+template <typename auditor_type = audit::null_auditor>
+class embed : public pipeline::transformer_element<embed<auditor_type>>,
+              private audit::with_auditor<auditor_type> {
 public:
-	explicit embed(const std::string &api_key,
-	        const std::string &model = "openai/text-embedding-3-small")
-	      : m_api_key(api_key), m_model(model) {
-	    log_scope(model);
-	  }
+
+  template <audit::stateless_auditor stateless_auditor_type = auditor_type>
+  explicit embed(const std::string &api_key,
+                 const std::string &model = "openai/text-embedding-3-small")
+      : embed(api_key, model, audit::auditor_ref<stateless_auditor_type>{}) {}
+
+  explicit embed(const std::string &api_key, const std::string &model,
+                 audit::auditor_ref<auditor_type> auditor)
+      : audit::with_auditor<auditor_type>(auditor), m_api_key(api_key),
+        m_model(model) {
+
+    audit::scope audit_scope{this->auditor(), [&] { return "model"_v = model; }};
+  }
 
   continuation operator()(message_ptr msg,
                           const message_callbacks &emit_message) {
-    log_scope(msg);
+    audit::scope embed_audit_scope{this->auditor(),
+                                   [&] { return "msg"_v = msg; }};
     if (!msg->is<data_source>())
       return emit_message(std::move(msg));
     const data_source &data = msg->get<data_source>();
@@ -51,30 +63,34 @@ public:
         !data.has_highest_confidence_mime_type_in({mime_type{"text/plain"}}),
         errors::program_logic{});
     std::string data_str = data.string();
-    std::vector<double> embedding_vector = parse_response(
-        post_request(prepare_query(data_str, m_model), m_api_key));
+    std::vector<double> embedding_vector =
+        parse_response(post_request(prepare_query(data_str)));
     return emit_message(ai::embedding{std::move(embedding_vector)});
   }
 
+protected:
+  using audit::with_auditor<auditor_type>::auditor;
 
 private:
   std::string m_api_key;
   std::string m_model;
 
-  static std::string prepare_query(const std::string &input,
-                                   const std::string &model) {
-    log_scope(input, model);
-    boost::json::object query{{"model", model}, {"input", input}};
+  std::string prepare_query(const std::string &input) const {
+    audit::scope audit_scope{this->auditor(), [&] {
+      return "input"_v = input, "model"_v = m_model;
+    }};
+    boost::json::object query{{"model", m_model}, {"input", input}};
     return boost::json::serialize(query);
   }
 
-  static std::string post_request(const std::string &query,
-                                  const std::string &api_key) {
-    log_scope(query);
+  std::string post_request(const std::string &query) const {
+    audit::scope audit_scope{this->auditor(), [&] { return "query"_v = query; }};
     std::ostringstream response_stream{};
     try {
       data_source{query, mime_type{"application/json"}, confidence::highest} |
-          http::post("https://openrouter.ai/api/v1/embedddings", api_key) |
+          http::post<auditor_type>("https://openrouter.ai/api/v1/embeddings",
+                                   m_api_key, http::ssl_verify_peer{true},
+                                   this->auditor()) |
           response_stream;
     } catch (const std::exception &e) {
       std::throw_with_nested(make_error(query));
@@ -82,8 +98,9 @@ private:
     return response_stream.str();
   }
 
-  static std::vector<double> parse_response(const std::string &response) {
-    log_scope(response);
+  std::vector<double> parse_response(const std::string &response) const {
+    audit::scope audit_scope{this->auditor(),
+                             [&] { return "response"_v = response; }};
     try {
       boost::json::value response_val = boost::json::parse(response);
       boost::json::object response_obj = response_val.as_object();
@@ -104,16 +121,15 @@ private:
 
       std::vector<double> embedding;
       embedding.reserve(embedding_array.size());
-
-      for (const auto &val : embedding_array) {
+      for (const auto &val : embedding_array)
         embedding.push_back(val.as_double());
-      }
       return embedding;
     } catch (const std::exception &e) {
       std::throw_with_nested(make_error(response));
     }
   }
 };
+
 } // namespace openrouter
 } // namespace docwire
 

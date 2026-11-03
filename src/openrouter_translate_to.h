@@ -12,23 +12,38 @@
 #ifndef DOCWIRE_OPENROUTER_TRANSLATE_TO_H
 #define DOCWIRE_OPENROUTER_TRANSLATE_TO_H
 
-#include "log_scope.h"
+#include "audit/auditor_ref.hpp"
+#include "audit/scope.hpp"
+#include "named.h"
 #include "openrouter_task.h"
 #include "serialization_enum.h" // IWYU pragma: keep
 #include <string>
+
 namespace docwire {
 namespace openrouter {
 
-class DOCWIRE_OPENROUTER_EXPORT translate_to : public task {
+template <typename auditor_type = audit::null_auditor>
+class translate_to : public task<auditor_type> {
 public:
+
+  template <audit::stateless_auditor stateless_auditor_type = auditor_type>
   explicit translate_to(const std::string &language, const std::string &api_key,
-               const std::string &model = "openrouter/auto",
-               float temperature = 0,
-               image_detail image_detail = image_detail::automatic)
-      : task("Your task is to translate every message to " + language +
-                 " language.",
-             api_key, model, temperature, image_detail) {
-    DOCWIRE_LOG_SCOPE(model, temperature, image_detail);
+              const std::string &model = "openrouter/auto", float temperature = 0,
+              image_detail image_detail = image_detail::automatic)
+      : translate_to(language, api_key, model, temperature, image_detail,
+           audit::auditor_ref<stateless_auditor_type>{}) {}
+
+  explicit translate_to(const std::string &language, const std::string &api_key, const std::string &model,
+              float temperature, image_detail image_detail,
+              audit::auditor_ref<auditor_type> auditor)
+      : task<auditor_type>("Your task is to translate every message to " + language +
+                                " language.",
+                           api_key, model, temperature, image_detail, auditor) {
+
+    audit::scope audit_scope{this->auditor(), [&] {
+      return "language"_v = language, "model"_v = model, "temperature"_v = temperature,
+             "image_detail"_v = image_detail;
+    }};
   }
 };
 
