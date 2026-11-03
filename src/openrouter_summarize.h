@@ -24,7 +24,7 @@ namespace openrouter {
 
 class DOCWIRE_OPENROUTER_EXPORT summarize : public task {
 public:
-  summarize(const std::string &api_key,
+  	explicit summarize(const std::string &api_key,
             const std::string &model = "openrouter/auto", float temperature = 0,
             image_detail image_detail = image_detail::automatic)
       : task("Your task is to summarize every message.", api_key, model,

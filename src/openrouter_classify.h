@@ -27,7 +27,7 @@ namespace openrouter {
 
 class DOCWIRE_OPENROUTER_EXPORT classify : public task {
 public:
-  classify(const std::set<std::string> &categories, const std::string &api_key,
+  	explicit classify(const std::set<std::string> &categories, const std::string &api_key,
            const std::string &model = "openrouter/auto", float temperature = 0,
            image_detail image_detail = image_detail::automatic)
       : task("Your task is to classify every message to one of the following "

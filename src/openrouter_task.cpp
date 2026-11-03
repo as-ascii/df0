@@ -13,11 +13,11 @@
 
 #include "base64.h"
 #include "error_tags.h"
-#include "input.h"
 #include "log_entry.h"
 #include "log_scope.h"
 #include "make_error.h"
-#include "output.h"
+#include "pipeline/input_element.hpp"
+#include "pipeline/output_element.hpp"
 #include "post.h"
 #include "serialization_enum.h"    // IWYU pragma: keep
 #include "serialization_message.h" // IWYU pragma: keep

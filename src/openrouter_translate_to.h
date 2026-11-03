@@ -21,7 +21,7 @@ namespace openrouter {
 
 class DOCWIRE_OPENROUTER_EXPORT translate_to : public task {
 public:
-  translate_to(const std::string &language, const std::string &api_key,
+  explicit translate_to(const std::string &language, const std::string &api_key,
                const std::string &model = "openrouter/auto",
                float temperature = 0,
                image_detail image_detail = image_detail::automatic)

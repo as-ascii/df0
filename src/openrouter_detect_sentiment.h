@@ -23,7 +23,7 @@ namespace openrouter {
 
 class DOCWIRE_OPENROUTER_EXPORT detect_sentiment : public task {
 public:
-  detect_sentiment(const std::string &api_key,
+  	explicit detect_sentiment(const std::string &api_key,
                    const std::string &model = "openrouter/auto",
                    float temperature = 0,
                    image_detail image_detail = image_detail::automatic)

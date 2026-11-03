@@ -24,7 +24,7 @@ namespace openrouter {
 
 class DOCWIRE_OPENROUTER_EXPORT find : public task {
 public:
-  find(const std::string& what, const std::string &api_key,
+  	explicit find(const std::string& what, const std::string &api_key,
        const std::string &model = "openrouter/auto", float temperature = 0,
        image_detail image_detail = image_detail::automatic)
       : task(

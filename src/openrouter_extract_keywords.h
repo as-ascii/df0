@@ -24,7 +24,7 @@ namespace openrouter {
 
 class DOCWIRE_OPENROUTER_EXPORT extract_keywords : public task {
 public:
-  extract_keywords(unsigned int max_keywords, const std::string &api_key,
+  	explicit extract_keywords(unsigned int max_keywords, const std::string &api_key,
                    const std::string &model = "openrouter/auto",
                    float temperature = 0,
                    image_detail image_detail = image_detail::automatic)

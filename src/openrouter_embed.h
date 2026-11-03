@@ -16,13 +16,13 @@
 #define DOCWIRE_OPENROUTER_EMBED_H
 
 #include "ai_elements.h"
-#include "chain_element.h"
+#include "pipeline/element_base.hpp"
 #include "error_tags.h"
-#include "input.h"
+#include "pipeline/input_element.hpp"
 #include "log_scope.h"
 #include "make_error.h"
 #include "openrouter_export.h"
-#include "output.h"
+#include "pipeline/output_element.hpp"
 #include "post.h"
 #include "serialization_message.h" // IWYU pragma: keep
 #include "throw_if.h"
@@ -33,16 +33,16 @@
 
 namespace docwire {
 namespace openrouter {
-class DOCWIRE_OPENROUTER_EXPORT embed : public chain_element {
+class DOCWIRE_OPENROUTER_EXPORT embed : public pipeline::transformer_element<embed> {
 public:
-  embed(const std::string &api_key,
-        const std::string &model = "openai/text-embedding-3-small")
-      : m_api_key(api_key), m_model(model) {
-    log_scope(model);
-  }
+	explicit embed(const std::string &api_key,
+	        const std::string &model = "openai/text-embedding-3-small")
+	      : m_api_key(api_key), m_model(model) {
+	    log_scope(model);
+	  }
 
   continuation operator()(message_ptr msg,
-                          const message_callbacks &emit_message) override {
+                          const message_callbacks &emit_message) {
     log_scope(msg);
     if (!msg->is<data_source>())
       return emit_message(std::move(msg));
@@ -56,7 +56,6 @@ public:
     return emit_message(ai::embedding{std::move(embedding_vector)});
   }
 
-  bool is_leaf() const override { return false; }
 
 private:
   std::string m_api_key;

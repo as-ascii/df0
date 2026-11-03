@@ -12,8 +12,9 @@
 #ifndef DOCWIRE_OPENROUTER_TASK_H
 #define DOCWIRE_OPENROUTER_TASK_H
 
-#include "chain_element.h"
 #include "openrouter_export.h"
+#include "pimpl.h"
+#include "pipeline/element_base.hpp"
 #include <string>
 
 namespace docwire {
@@ -26,8 +27,9 @@ enum class image_detail { low, high, automatic };
  * single API that routes requests to hundreds of models across many providers
  * (OpenAI, Anthropic, Google, Meta, Mistral, DeepSeek, and more).
  */
-class DOCWIRE_OPENROUTER_EXPORT task : public chain_element,
-                                       public with_pimpl<task> {
+class DOCWIRE_OPENROUTER_EXPORT task
+    : public pipeline::transformer_element<task>,
+      public with_pimpl<task> {
 public:
   /**
    * @param system_message System prompt sent with every request.
@@ -52,9 +54,7 @@ public:
    * @param emit_message Callback invoked to emit produced messages.
    */
   continuation operator()(message_ptr msg,
-                          const message_callbacks &emit_message) override;
-
-  bool is_leaf() const override { return false; }
+                          const message_callbacks &emit_message);
 
 private:
   using with_pimpl<task>::impl;

@@ -12,12 +12,12 @@
 #ifndef DOCWIRE_OPENROUTER_TEXT_TO_SPEECH_H
 #define DOCWIRE_OPENROUTER_TEXT_TO_SPEECH_H
 
-#include "chain_element.h"
-#include "input.h"
+#include "pipeline/element_base.hpp"
+#include "pipeline/input_element.hpp"
 #include "log_scope.h"
 #include "make_error.h"
 #include "openrouter_export.h"
-#include "output.h"
+#include "pipeline/output_element.hpp"
 #include "post.h"
 #include "serialization_message.h" // IWYU pragma: keep
 #include <boost/json.hpp>
@@ -26,9 +26,9 @@
 
 namespace docwire {
 namespace openrouter {
-class DOCWIRE_OPENROUTER_EXPORT text_to_speech : public chain_element {
+class DOCWIRE_OPENROUTER_EXPORT text_to_speech : public pipeline::transformer_element<text_to_speech> {
 public:
-  text_to_speech(const std::string &api_key,
+  explicit text_to_speech(const std::string &api_key,
                  const std::string &model = "openai/gpt-4o-mini-tts-2025-12-15",
                  const std::string &voice = "alloy",
                  const std::string &response_format = "mp3")
@@ -38,7 +38,7 @@ public:
   }
 
   continuation operator()(message_ptr msg,
-                          const message_callbacks &emit_message) override {
+                          const message_callbacks &emit_message) {
     log_scope();
     if (!msg->is<data_source>())
       return emit_message(std::move(msg));
@@ -49,8 +49,6 @@ public:
         m_api_key);
     return emit_message(data_source{content});
   }
-
-  bool is_leaf() const override { return false; }
 
 private:
   std::string m_api_key;

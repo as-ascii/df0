@@ -24,7 +24,7 @@ namespace openrouter {
 
 class DOCWIRE_OPENROUTER_EXPORT extract_entities : public task {
 public:
-  extract_entities(const std::string &api_key,
+  	explicit extract_entities(const std::string &api_key,
                    const std::string &model = "openrouter/auto",
                    float temperature = 0,
                    image_detail image_detail = image_detail::automatic)
