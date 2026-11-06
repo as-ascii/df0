@@ -217,6 +217,11 @@ set(common_examples
     openai_find_image
     openai_embedding
     openrouter_classify
+    openrouter_translate
+    openrouter_sentiment
+    openrouter_transcribe
+    openrouter_find_image
+    openrouter_embedding
     reuse_chain
     join_transformers
     xml_parsing_example

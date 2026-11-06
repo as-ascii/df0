@@ -59,7 +59,7 @@ public:
     if (!msg->is<data_source>())
       return emit_message(std::move(msg));
     const data_source &data = msg->get<data_source>();
-    throw_if(
+    DOCWIRE_THROW_IF(
         !data.has_highest_confidence_mime_type_in({mime_type{"text/plain"}}),
         errors::program_logic{});
     std::string data_str = data.string();
@@ -93,7 +93,7 @@ private:
                                    this->auditor()) |
           response_stream;
     } catch (const std::exception &e) {
-      std::throw_with_nested(make_error(query));
+      std::throw_with_nested(DOCWIRE_MAKE_ERROR(query));
     }
     return response_stream.str();
   }
@@ -109,7 +109,7 @@ private:
         std::string message = err.contains("message")
                                   ? err.at("message").as_string().c_str()
                                   : "unknown error";
-        throw make_error("OpenRouter API returned an error", message);
+        throw DOCWIRE_MAKE_ERROR("OpenRouter API returned an error", message);
       }
       const auto &embedding_array = response_val.as_object()
                                         .at("data")
@@ -125,7 +125,7 @@ private:
         embedding.push_back(val.as_double());
       return embedding;
     } catch (const std::exception &e) {
-      std::throw_with_nested(make_error(response));
+      std::throw_with_nested(DOCWIRE_MAKE_ERROR(response));
     }
   }
 };

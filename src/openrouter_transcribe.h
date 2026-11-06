@@ -116,7 +116,7 @@ private:
     if (auto mt = data.highest_confidence_mime_type())
       if (auto it = by_mime.find(mt->v); it != by_mime.end())
         return it->second;
-    throw make_error("Unable to determine audio format for OpenRouter "
+    throw DOCWIRE_MAKE_ERROR("Unable to determine audio format for OpenRouter "
                      "transcription (unknown file extension and MIME type)",
                      errors::uninterpretable_data{});
   }
@@ -142,7 +142,7 @@ private:
               http::ssl_verify_peer{true}, this->auditor()) |
           response_stream;
     } catch (const std::exception &) {
-      std::throw_with_nested(make_error("Error during transcription"));
+      std::throw_with_nested(DOCWIRE_MAKE_ERROR("Error during transcription"));
     }
     return response_stream.str();
   }
@@ -157,11 +157,11 @@ private:
             err.is_object() && err.as_object().contains("message")
                 ? std::string{err.as_object().at("message").as_string().c_str()}
                 : "unknown error";
-        throw make_error("OpenRouter API returned an error", message);
+        throw DOCWIRE_MAKE_ERROR("OpenRouter API returned an error", message);
       }
       return obj.at("text").as_string().c_str();
     } catch (const std::exception &) {
-      std::throw_with_nested(make_error(response));
+      std::throw_with_nested(DOCWIRE_MAKE_ERROR(response));
     }
   }
 

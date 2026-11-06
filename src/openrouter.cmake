@@ -2,7 +2,7 @@ add_library(docwire_openrouter SHARED
     openrouter_task.cpp)
 
 find_package(Boost REQUIRED COMPONENTS json)
-target_link_libraries(docwire_openrouter PRIVATE docwire_base64 docwire_core docwire_ai docwire_http Boost::json)
+target_link_libraries(docwire_openrouter PUBLIC docwire_base64 docwire_core docwire_ai docwire_http Boost::json)
 
 install(TARGETS docwire_openrouter EXPORT docwire_targets)
 if(MSVC)
