@@ -23,7 +23,8 @@ namespace docwire {
 namespace openrouter {
 
 template <typename auditor_type = audit::null_auditor>
-class detect_sentiment : public task<auditor_type> {
+class detect_sentiment : public pipeline::transformer_element<detect_sentiment<auditor_type>>,
+                         public task<auditor_type> {
 public:
 
   template <audit::stateless_auditor stateless_auditor_type = auditor_type>

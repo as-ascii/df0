@@ -23,7 +23,8 @@ namespace docwire {
 namespace openrouter {
 
 template <typename auditor_type = audit::null_auditor>
-class translate_to : public task<auditor_type> {
+class translate_to : public pipeline::transformer_element<translate_to<auditor_type>>,
+                     public task<auditor_type> {
 public:
 
   template <audit::stateless_auditor stateless_auditor_type = auditor_type>

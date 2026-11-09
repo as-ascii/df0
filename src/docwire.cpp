@@ -29,18 +29,9 @@
 #include <functional>
 #include <memory>
 #include <fstream>
-#include "analyze_data.h"
-#include "classify.h"
 #include "content_type.h"
 #include "csv_exporter.h"
 #include "archives_parser.h"
-#include "detect_sentiment.h"
-#include "embed.h"
-
-
-#include "extract_entities.h"
-#include "extract_keywords.h"
-#include "find.h"
 #include "html_exporter.h"
 #include "language.h"
 #include "audit.hpp"
@@ -56,10 +47,6 @@
 #include "post.h"
 #include "resource_path.h"
 #include "standard_filter.h"
-#include "summarize.h"
-#include "text_to_speech.h"
-#include "transcribe.h"
-#include "translate_to.h"
 #include "version.h"
 #include "pipeline/chain_expression.hpp"
 #include "pipeline/input_element.hpp"
@@ -85,12 +72,6 @@ static void version()
 }
 
 namespace docwire
-{
-	using magic_enum::istream_operators::operator>>;
-	using magic_enum::ostream_operators::operator<<;
-}
-
-namespace docwire::openai
 {
 	using magic_enum::istream_operators::operator>>;
 	using magic_enum::ostream_operators::operator<<;
@@ -221,26 +202,6 @@ int main(int argc, char* argv[])
 		("local-ai-prompt", po::value<std::string>(), "prompt to process text via local AI model")
 		("local-ai-ct2-embed", po::value<embed_prefix_type>()->implicit_value(embed_prefix_type::none), "generate embedding of text via local AI model. Optional argument selects the prefix type: (e.g. \"passage: \" or \"query: \" or \"none: \").")
 		("local-ai-model", po::value<std::string>(), "path to local AI model data (build-in default model is used if not specified)")
-		("openai-chat", po::value<std::string>(), "prompt to process text and images via OpenAI")
-		("openai-extract-entities", "extract entities from text and images via OpenAI")
-		("openai-extract-keywords", po::value<unsigned int>(), "extract N keywords/key phrases from text and images via OpenAI")
-		("openai-summarize", "summarize text and images via OpenAI")
-		("openai-detect-sentiment", "detect sentiment of text and images via OpenAI")
-		("openai-analyze-data", "analyze text and images for inportant insights and generate conclusions via OpenAI")
-		("openai-classify", po::value<std::vector<std::string>>()->multitoken(), "classify text and images via OpenAI to one of specified categories")
-		("openai-translate-to", po::value<std::string>(), "language to translate text and images to via OpenAI")
-		("openai-find", po::value<std::string>(), "find phrase, object or event in text and images via OpenAI")
-		("openai-text-to-speech", "convert text to speech via OpenAI")
-		("openai-embed", "generate embedding of text via OpenAI")
-		("openai-transcribe", "convert speech to text (transcribe) via OpenAI")
-		("openai-key", po::value<std::string>()->default_value(""), "OpenAI API key")
-		("openai-model", po::value<openai::model>()->default_value(openai::model::gpt_5), enum_names_str<openai::model>().c_str())
-		("openai-tts-model", po::value<openai::text_to_speech_model>()->default_value(openai::text_to_speech_model::gpt_4o_mini_tts), enum_names_str<openai::text_to_speech_model>().c_str())
-		("openai-embed-model", po::value<openai::embed_model>()->default_value(openai::embed_model::text_embedding_3_small), enum_names_str<openai::embed_model>().c_str())
-		("openai-transcribe-model", po::value<openai::transcribe_model>()->default_value(openai::transcribe_model::gpt_4o_transcribe), enum_names_str<openai::transcribe_model>().c_str())
-		("openai-voice", po::value<openai::text_to_speech_voice>()->default_value(openai::text_to_speech_voice::alloy), enum_names_str<openai::text_to_speech_voice>().c_str())
-		("openai-temperature", po::value<float>(), "force specified temperature for OpenAI prompts")
-		("openai-image-detail", po::value<openai::image_detail>()->default_value(openai::image_detail::automatic), enum_names_str<openai::image_detail>().c_str())
 		("language", po::value<std::vector<language>>()->default_value({language::eng}, "eng"), "Set the document language(s) for OCR as ISO 639-3 identifiers like: spa, fra, deu, rus, chi_sim, chi_tra etc. More than 100 languages are supported. Multiple languages can be enabled.")
 		("ocr-confidence-threshold", po::value<float>()->notifier([](float val) {
 			if (val < 0.0f || val > 100.0f) {
@@ -387,93 +348,6 @@ int run_with_auditor(
 				http::ssl_verify_peer{true},
 				auditor);
 		})
-		| maybe(vm.count("openai-chat"), [&] {
-			return openai::chat<configured_auditor>(
-				vm["openai-chat"].as<std::string>(),
-				vm["openai-key"].as<std::string>(),
-				vm["openai-model"].as<openai::model>(),
-				vm.count("openai-temperature")
-					? vm["openai-temperature"].as<float>()
-					: 0.0f,
-				vm["openai-image-detail"].as<openai::image_detail>(),
-				auditor);
-		})
-		| maybe(vm.count("openai-extract-entities"), [&] {
-			return openai::extract_entities<configured_auditor>(
-				vm["openai-key"].as<std::string>(),
-				vm["openai-model"].as<openai::model>(),
-				vm.count("openai-temperature")
-					? vm["openai-temperature"].as<float>()
-					: 0.0f,
-				vm["openai-image-detail"].as<openai::image_detail>(),
-				auditor);
-		})
-		| maybe(vm.count("openai-extract-keywords"), [&] {
-			return openai::extract_keywords<configured_auditor>(
-				vm["openai-extract-keywords"].as<unsigned int>(),
-				vm["openai-key"].as<std::string>(),
-				vm["openai-model"].as<openai::model>(),
-				vm.count("openai-temperature")
-					? vm["openai-temperature"].as<float>()
-					: 0.0f,
-				vm["openai-image-detail"].as<openai::image_detail>(),
-				auditor);
-		})
-		| maybe(vm.count("openai-summarize"), [&] {
-			return openai::summarize<configured_auditor>(
-				vm["openai-key"].as<std::string>(),
-				vm["openai-model"].as<openai::model>(),
-				vm.count("openai-temperature")
-					? vm["openai-temperature"].as<float>()
-					: 0.0f,
-				vm["openai-image-detail"].as<openai::image_detail>(),
-				auditor);
-		})
-		| maybe(vm.count("openai-detect-sentiment"), [&] {
-			return openai::detect_sentiment<configured_auditor>(
-				vm["openai-key"].as<std::string>(),
-				vm["openai-model"].as<openai::model>(),
-				vm.count("openai-temperature")
-					? vm["openai-temperature"].as<float>()
-					: 0.0f,
-				vm["openai-image-detail"].as<openai::image_detail>(),
-				auditor);
-		})
-		| maybe(vm.count("openai-analyze-data"), [&] {
-			return openai::analyze_data<configured_auditor>(
-				vm["openai-key"].as<std::string>(),
-				vm["openai-model"].as<openai::model>(),
-				vm.count("openai-temperature")
-					? vm["openai-temperature"].as<float>()
-					: 0.0f,
-				vm["openai-image-detail"].as<openai::image_detail>(),
-				auditor);
-		})
-		| maybe(vm.count("openai-classify"), [&] {
-			const std::vector<std::string>& categories =
-				vm["openai-classify"].as<std::vector<std::string>>();
-			std::set<std::string> categories_set(categories.begin(), categories.end());
-			return openai::classify<configured_auditor>(
-				categories_set,
-				vm["openai-key"].as<std::string>(),
-				vm["openai-model"].as<openai::model>(),
-				vm.count("openai-temperature")
-					? vm["openai-temperature"].as<float>()
-					: 0.0f,
-				vm["openai-image-detail"].as<openai::image_detail>(),
-				auditor);
-		})
-		| maybe(vm.count("openai-translate-to"), [&] {
-			return openai::translate_to<configured_auditor>(
-				vm["openai-translate-to"].as<std::string>(),
-				vm["openai-key"].as<std::string>(),
-				vm["openai-model"].as<openai::model>(),
-				vm.count("openai-temperature")
-					? vm["openai-temperature"].as<float>()
-					: 0.0f,
-				vm["openai-image-detail"].as<openai::image_detail>(),
-				auditor);
-		})
 #ifdef DOCWIRE_LOCAL_AI
 		| maybe(vm.count("local-ai-prompt"), [&] {
 			auto runner = create_local_runner(
@@ -505,31 +379,7 @@ int run_with_auditor(
 			};
 		})
 #endif
-		| maybe(vm.count("openai-find"), [&] {
-			return openai::find<configured_auditor>(
-				vm["openai-find"].as<std::string>(),
-				vm["openai-key"].as<std::string>(),
-				vm["openai-model"].as<openai::model>(),
-				vm.count("openai-temperature")
-					? vm["openai-temperature"].as<float>()
-					: 0.0f,
-				vm["openai-image-detail"].as<openai::image_detail>(),
-				auditor);
-		})
-		| maybe(vm.count("openai-text-to-speech"), [&] {
-			return openai::text_to_speech<configured_auditor>(
-				vm["openai-key"].as<std::string>(),
-				vm["openai-tts-model"].as<openai::text_to_speech_model>(),
-				vm["openai-voice"].as<openai::text_to_speech_voice>(),
-				auditor);
-		})
-		| maybe(vm.count("openai-embed"), [&] {
-			return openai::embed<configured_auditor>(
-				vm["openai-key"].as<std::string>(),
-				vm["openai-embed-model"].as<openai::embed_model>(),
-				auditor);
-		})
-		| [](message_ptr msg,
+		| pipeline::function_transformer{[](message_ptr msg,
 			 const message_callbacks& emit_message) -> continuation
 			{
 				if (msg->is<ai::embedding>())
@@ -546,8 +396,8 @@ int run_with_auditor(
 					return emit_message(data_source{embedding_str});
 				}
 				return emit_message(std::move(msg));
-			}
-		| [](message_ptr msg,
+			}}
+		| pipeline::function_transformer{[](message_ptr msg,
 			 const message_callbacks& emit_message) -> continuation
 			{
 				if (msg->is<std::exception_ptr>())
@@ -556,36 +406,7 @@ int run_with_auditor(
 							   msg->get<std::exception_ptr>())
 						<< std::endl;
 				return emit_message(std::move(msg));
-			};
-
-	if (vm.count("openai-transcribe"))
-	{
-		auto pipeline =
-			content_type::detector{}
-			| openai::transcribe<configured_auditor>(
-				vm["openai-key"].as<std::string>(),
-				vm["openai-transcribe-model"].as<openai::transcribe_model>(),
-				auditor)
-			| plain_text_exporter{}
-			| std::move(optional_suffix);
-
-		try
-		{
-			run_pipeline(std::move(data), pipeline);
-		}
-		catch (const std::exception& e)
-		{
-			std::cerr << "[ERROR] " << errors::diagnostic_message(e)
-				<< "processing file " + file_name << std::endl;
-			return 2;
-		}
-		catch (...)
-		{
-			std::cerr << "[ERROR] Unknown error\nprocessing file " + file_name << std::endl;
-			return 2;
-		}
-		return 0;
-	}
+			}};
 
 	if (local_processing)
 	{

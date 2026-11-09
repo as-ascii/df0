@@ -31,7 +31,7 @@ target_link_libraries(docwire_tests PRIVATE
 	docwire_audit
 	docwire_core docwire_office_formats docwire_mail docwire_ocr docwire_archives
 	docwire_fuzzy_match docwire_base64 docwire_content_type docwire_http
-	docwire_openai docwire_xml docwire_openrouter
+    docwire_openrouter docwire_xml docwire_openrouter
 	GTest::gtest GTest::gmock Boost::json
 )
 
@@ -209,13 +209,6 @@ set(common_examples
     filter_emails_by_subject
     stream_to_html
     parse_archives
-    openai_classify
-    openai_translate
-    openai_sentiment
-    openai_voice_summary
-    openai_transcribe_summary
-    openai_find_image
-    openai_embedding
     openrouter_classify
     openrouter_translate
     openrouter_sentiment
@@ -260,32 +253,25 @@ foreach(example IN LISTS all_examples)
 	add_executable(${example} ${example}.cpp)
 	target_include_directories(${example} PUBLIC ../src)
 	target_link_libraries(${example} PRIVATE docwire_core docwire_office_formats docwire_mail
-		docwire_ocr docwire_archives docwire_ai docwire_openai docwire_fuzzy_match
+		docwire_ocr docwire_archives docwire_ai docwire_openrouter docwire_fuzzy_match
 		docwire_content_type docwire_http docwire_openrouter)
 
 	if(TARGET docwire_local_ai)
         target_link_libraries(${example} PRIVATE docwire_local_ai)
     endif()
 
-	# Read the example file to check for OpenAI and local AI usage.
+	# Read the example file to check for local AI usage.
 	file(READ ${example}.cpp example_content)
-	string(FIND "${example_content}" "openai::" openai_pos)
-	string(FIND "${example_content}" "OPENAI_API_KEY" openai_key_pos)
 	string(FIND "${example_content}" "openrouter::" openrouter_pos)
 	string(FIND "${example_content}" "OPENROUTER_API_KEY" openrouter_key_pos)
-
-	set(openai_requirement_met FALSE)
-	if ((openai_pos EQUAL -1 AND openai_key_pos EQUAL -1) OR NOT "$ENV{OPENAI_API_KEY}" STREQUAL "")
-		set(openai_requirement_met TRUE)
-	endif()
 
 	set(openrouter_requirement_met FALSE)
 	if ((openrouter_pos EQUAL -1 AND openrouter_key_pos EQUAL -1) OR NOT "$ENV{OPENROUTER_API_KEY}" STREQUAL "")
 		set(openrouter_requirement_met TRUE)
 	endif()
 
-	# Conditionally add the test, skipping OpenAI examples if the key is not set.
-	if (openai_requirement_met AND openrouter_requirement_met)
+	# Conditionally add the test, skipping OpenRouter examples if the key is not set.
+	if (openrouter_requirement_met)
 		add_test(NAME ${example} COMMAND ${example})
 		if(WIN32)
 			set_property(TEST ${example} APPEND PROPERTY ENVIRONMENT "${docwire_test_env_path}")
@@ -298,9 +284,6 @@ foreach(example IN LISTS all_examples)
 			set_property(TEST ${example} PROPERTY LABELS "is_example")
 		endif()
 	else()
-		if (NOT openai_requirement_met)
-			message(STATUS "Skipping test for ${example} because it uses OpenAI and OPENAI_API_KEY is not set.")
-		endif()
 		if (NOT openrouter_requirement_met)
 			message(STATUS "Skipping test for ${example} because it uses OpenRouter and OPENROUTER_API_KEY is not set.")
 		endif()
@@ -320,7 +303,7 @@ if(TARGET docwire_ai_ct2)
 	    docwire_content_type
 	    docwire_ai
 	    docwire_local_ai
-	    docwire_openai
+	    docwire_openrouter
 	    docwire_fuzzy_match
 	    docwire_http
     )
@@ -344,7 +327,7 @@ if(TARGET docwire_ai_llama)
 	    docwire_content_type
 	    docwire_ai
 	    docwire_local_ai
-	    docwire_openai
+	    docwire_openrouter
 	    docwire_fuzzy_match
 	    docwire_http
     )

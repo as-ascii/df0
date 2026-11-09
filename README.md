@@ -421,14 +421,6 @@ ensure(out_stream.str()) == "report";
 ```
 [Full example](https://docwire.readthedocs.io/en/latest/local_ai_ct2_classify_8cpp-example.html)
 
-Classify file in any format (Office, PDF, mail, etc) to any categories using OpenAI service:
-
-```cpp
-std::filesystem::path("...") | ... | openai::classify({ "agreement", "invoice", "report", ...}, ...) | out_stream;
-ensure(out_stream.str()) == "report\n";
-```
-[Full example](https://docwire.readthedocs.io/en/latest/openai_classify_8cpp-example.html)
-
 Translate document in any format (Office, PDF, mail, etc) to other language using built-in local AI model:
 
 ```cpp
@@ -436,14 +428,6 @@ std::filesystem::path("...") | ... | ai::local::ct2::translate("spanish") | out_
 ensure(fuzzy_match::ratio(out_stream.str(), "La procesación de datos se refiere a las actividades...")) > 80;
 ```
 [Full example](https://docwire.readthedocs.io/en/latest/local_ai_ct2_translate_8cpp-example.html)
-
-Translate document in any format (Office, PDF, mail, etc) to other language using OpenAI service:
-
-```cpp
-std::filesystem::path("...") | ... | openai::translate_to("spanish", ...) | out_stream;
-ensure(fuzzy_match::ratio(out_stream.str(), "El procesamiento de datos se refiere a las actividades...")) > 80;
-```
-[Full example](https://docwire.readthedocs.io/en/latest/openai_translate_8cpp-example.html)
 
 Detect sentiment of document in any format (Office, PDF, mail, etc) using built-in local AI model:
 
@@ -453,13 +437,6 @@ ensure(out_stream.str()) == "positive";
 ```
 [Full example](https://docwire.readthedocs.io/en/latest/local_ai_ct2_sentiment_8cpp-example.html)
 
-Detect sentiment of document in any format (Office, PDF, mail, etc) using OpenAI service:
-
-```cpp
-std::filesystem::path("1.doc") | ... | openai::detect_sentiment(...) | std::cout;
-```
-[Full example](https://docwire.readthedocs.io/en/latest/openai_sentiment_8cpp-example.html)
-
 Make a summary of document in any format (Office, PDF, mail, etc) using built-in local AI model:
 
 ```cpp
@@ -467,21 +444,6 @@ std::filesystem::path("...") | ... | ai::local::ct2::summarize() | out_stream;
 ensure(fuzzy_match::ratio(out_stream.str(), "Data processing is the collection, organization, analysis, and interpretation of data.\n")) > 50
 ```
 [Full example](https://docwire.readthedocs.io/en/latest/local_ai_ct2_summary_8cpp-example.html)
-
-Make a voice summary of document in any format (Office, PDF, mail, etc) in two steps: summarize using GPT model and convert the summary to speech using text to speech model. Result is saved to mp3 file:
-
-```cpp
-std::filesystem::path("1.doc") | ... | openai::summarize(...) | openai::text_to_speech(...) | std::ofstream("summary.mp3");
-```
-[Full example](https://docwire.readthedocs.io/en/latest/openai_voice_summary_8cpp-example.html)
-
-Make a text summary of voice recording (e.g. mp3 file with meeting recording) in two steps: convert voice to text and summarize text using OpenAI services (with non-default model selected):
-
-```cpp
-std::filesystem::path("...mp3") | openai::transcribe(...) | ... | openai::summarize(..., openai::model::gpt_4o) | out_stream;
-ensure(fuzzy_match::ratio(out_stream.str(), "Data processing involves converting raw data...")) > 80;
-```
-[Full example](https://docwire.readthedocs.io/en/latest/openai_transcribe_summary_8cpp-example.html)
 
 Find phrases, objects and events with smart matching in documents in any format (Office, PDF, mail, etc) using built-in local AI model:
 
@@ -491,23 +453,6 @@ ensure(out_stream.str()).is_one_of({ "Data processing refers to the activities p
 ```
 [Full example](https://docwire.readthedocs.io/en/latest/local_ai_ct2_find_8cpp-example.html)
 
-Find phrases, objects and events in text or image using GPT model (with non-default model selected):
-
-```cpp
-std::filesystem::path("scene_1.png") | ... | openai::find("tree", ..., openai::model::gpt_4o) | out_stream;
-ensure(fuzzy_match::ratio(out_stream.str(), "2\n- A tree is located on the left side...")) > 80;
-```
-[Full example](https://docwire.readthedocs.io/en/latest/openai_find_image_8cpp-example.html)
-
-Create embedding for document in any format (Office, PDF, mail, etc) using OpenAI service:
-
-```cpp
-std::filesystem::path("...") | ... | openai::embed(...) | out_msgs;
-...
-ensure(out_msgs[0]->is<ai::embedding>()) == true;
-ensure(out_msgs[0]->get<ai::embedding>().values.size()) == 1536;
-```
-[Full example](https://docwire.readthedocs.io/en/latest/openai_embedding_8cpp-example.html)
 
 Create embedding for document in any format (Office, PDF, mail, etc) using built-in local AI model, create embeddings for two queries and calculate similarity:
 

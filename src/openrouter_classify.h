@@ -25,7 +25,8 @@ namespace docwire {
 namespace openrouter {
 
 template <typename auditor_type = audit::null_auditor>
-class classify : public task<auditor_type> {
+class classify : public pipeline::transformer_element<classify<auditor_type>>,
+                 public task<auditor_type> {
 public:
   template <audit::stateless_auditor stateless_auditor_type = auditor_type>
   explicit classify(const std::set<std::string> &categories,
