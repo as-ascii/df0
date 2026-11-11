@@ -1,13 +1,11 @@
-/*********************************************************************************************************************************************/
-/*  DocWire SDK: Award-winning modern data processing in C++20. SourceForge Community Choice & Microsoft support. AI-driven processing.      */
-/*  Supports nearly 100 data formats, including email boxes and OCR. Boost efficiency in text extraction, web data extraction, data mining,  */
-/*  document analysis. Offline processing possible for security and confidentiality                                                          */
-/*                                                                                                                                           */
-/*  Copyright (c) SILVERCODERS Ltd, http://silvercoders.com                                                                                  */
-/*  Project homepage: https://github.com/docwire/docwire                                                                                     */
-/*                                                                                                                                           */
-/*  SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-DocWire-Commercial                                                                  */
-/*********************************************************************************************************************************************/
+/**************************************************************************/
+/*                                                                        */
+/*  DF-0: Data processing Framework with Zero-overhead                    */
+/*                                                                        */
+/*  Copyright (c) DF-0 Team               https://github.com/df0-io/df0   */
+/*  SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-DF0-Commercial   */
+/*                                                                        */
+/**************************************************************************/
 
 #include "openrouter_task.h"
 
@@ -28,7 +26,7 @@
 #include <boost/json.hpp>
 #include <sstream>
 
-namespace docwire {
+namespace df0 {
 
 using namespace openrouter;
 
@@ -53,9 +51,9 @@ struct pimpl_impl<openrouter::task<auditor_type>>
   image_detail m_image_detail;
 };
 
-} // namespace docwire
+} // namespace df0
 
-namespace docwire {
+namespace df0 {
 namespace openrouter {
 
 template <typename auditor_type>
@@ -212,8 +210,8 @@ continuation task<auditor_type>::operator()(
   return emit_message(data_source{content});
 }
 
-template class DOCWIRE_OPENROUTER_EXPORT task<docwire::audit::null_auditor>;
-template class DOCWIRE_OPENROUTER_EXPORT task<docwire::audit::json_stream_auditor>;
+template class DF0_OPENROUTER_EXPORT task<df0::audit::null_auditor>;
+template class DF0_OPENROUTER_EXPORT task<df0::audit::json_stream_auditor>;
 
 } // namespace openrouter
-} // namespace docwire
+} // namespace df0

@@ -1,16 +1,14 @@
-/*********************************************************************************************************************************************/
-/*  DocWire SDK: Award-winning modern data processing in C++20. SourceForge Community Choice & Microsoft support. AI-driven processing.      */
-/*  Supports nearly 100 data formats, including email boxes and OCR. Boost efficiency in text extraction, web data extraction, data mining,  */
-/*  document analysis. Offline processing possible for security and confidentiality                                                          */
-/*                                                                                                                                           */
-/*  Copyright (c) SILVERCODERS Ltd, http://silvercoders.com                                                                                  */
-/*  Project homepage: https://github.com/docwire/docwire                                                                                     */
-/*                                                                                                                                           */
-/*  SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-DocWire-Commercial                                                                  */
-/*********************************************************************************************************************************************/
+/**************************************************************************/
+/*                                                                        */
+/*  DF-0: Data processing Framework with Zero-overhead                    */
+/*                                                                        */
+/*  Copyright (c) DF-0 Team               https://github.com/df0-io/df0   */
+/*  SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-DF0-Commercial   */
+/*                                                                        */
+/**************************************************************************/
 
-#ifndef DOCWIRE_OPENROUTER_TEXT_TO_SPEECH_H
-#define DOCWIRE_OPENROUTER_TEXT_TO_SPEECH_H
+#ifndef DF0_OPENROUTER_TEXT_TO_SPEECH_H
+#define DF0_OPENROUTER_TEXT_TO_SPEECH_H
 
 #include "audit/auditor_ref.hpp"
 #include "audit/scope.hpp"
@@ -26,7 +24,7 @@
 #include <sstream>
 #include <string>
 
-namespace docwire {
+namespace df0 {
 namespace openrouter {
 
 template <typename auditor_type = audit::null_auditor>
@@ -102,13 +100,13 @@ private:
                                    this->auditor()) |
           response_stream;
     } catch (const std::exception &e) {
-      std::throw_with_nested(DOCWIRE_MAKE_ERROR(query));
+      std::throw_with_nested(make_error(query));
     }
     return response_stream.str();
   }
 };
 
 } // namespace openrouter
-} // namespace docwire
+} // namespace df0
 
-#endif // DOCWIRE_OPENROUTER_TEXT_TO_SPEECH_H
+#endif // DF0_OPENROUTER_TEXT_TO_SPEECH_H

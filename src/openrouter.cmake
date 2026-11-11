@@ -1,14 +1,14 @@
-add_library(docwire_openrouter SHARED
+add_library(df0_openrouter SHARED
     openrouter_task.cpp)
 
 find_package(Boost REQUIRED COMPONENTS json)
-target_link_libraries(docwire_openrouter PUBLIC docwire_base64 docwire_core docwire_ai docwire_http Boost::json)
+target_link_libraries(df0_openrouter PUBLIC df0_base64 df0_core df0_ai df0_http Boost::json)
 
-install(TARGETS docwire_openrouter EXPORT docwire_targets)
+install(TARGETS df0_openrouter EXPORT df0_targets)
 if(MSVC)
-	install(FILES $<TARGET_PDB_FILE:docwire_openrouter> DESTINATION bin CONFIGURATIONS Debug)
+	install(FILES $<TARGET_PDB_FILE:df0_openrouter> DESTINATION bin CONFIGURATIONS Debug)
 endif()
 
 include(GenerateExportHeader)
-generate_export_header(docwire_openrouter EXPORT_FILE_NAME openrouter_export.h)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/openrouter_export.h DESTINATION include/docwire)
+generate_export_header(df0_openrouter EXPORT_FILE_NAME openrouter_export.h)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/openrouter_export.h DESTINATION include/df0)

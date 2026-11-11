@@ -1,9 +1,18 @@
+/**************************************************************************/
+/*                                                                        */
+/*  DF-0: Data processing Framework with Zero-overhead                    */
+/*                                                                        */
+/*  Copyright (c) DF-0 Team               https://github.com/df0-io/df0   */
+/*  SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-DF0-Commercial   */
+/*                                                                        */
+/**************************************************************************/
+
 #include "json_serialization.h"
 #include "serialization.h"
 #include "gtest/gtest.h"
 #include <cstdint>
 
-using namespace docwire::serialization;
+using namespace df0::serialization;
 
 TEST(JsonSerialization, Null)
 {

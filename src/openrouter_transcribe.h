@@ -1,16 +1,14 @@
-/*********************************************************************************************************************************************/
-/*  DocWire SDK: Award-winning modern data processing in C++20. SourceForge Community Choice & Microsoft support. AI-driven processing.      */
-/*  Supports nearly 100 data formats, including email boxes and OCR. Boost efficiency in text extraction, web data extraction, data mining,  */
-/*  document analysis. Offline processing possible for security and confidentiality                                                          */
-/*                                                                                                                                           */
-/*  Copyright (c) SILVERCODERS Ltd, http://silvercoders.com                                                                                  */
-/*  Project homepage: https://github.com/docwire/docwire                                                                                     */
-/*                                                                                                                                           */
-/*  SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-DocWire-Commercial                                                                  */
-/*********************************************************************************************************************************************/
+/**************************************************************************/
+/*                                                                        */
+/*  DF-0: Data processing Framework with Zero-overhead                    */
+/*                                                                        */
+/*  Copyright (c) DF-0 Team               https://github.com/df0-io/df0   */
+/*  SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-DF0-Commercial   */
+/*                                                                        */
+/**************************************************************************/
 
-#ifndef DOCWIRE_OPENROUTER_TRANSCRIBE_H
-#define DOCWIRE_OPENROUTER_TRANSCRIBE_H
+#ifndef DF0_OPENROUTER_TRANSCRIBE_H
+#define DF0_OPENROUTER_TRANSCRIBE_H
 
 #include "audit/auditor_ref.hpp"
 #include "audit/entry.hpp"
@@ -32,7 +30,7 @@
 #include <string>
 #include <string_view>
 
-namespace docwire {
+namespace df0 {
 namespace openrouter {
 
 namespace transcribe_model {
@@ -116,7 +114,7 @@ private:
     if (auto mt = data.highest_confidence_mime_type())
       if (auto it = by_mime.find(mt->v); it != by_mime.end())
         return it->second;
-    throw DOCWIRE_MAKE_ERROR("Unable to determine audio format for OpenRouter "
+    throw make_error("Unable to determine audio format for OpenRouter "
                      "transcription (unknown file extension and MIME type)",
                      errors::uninterpretable_data{});
   }
@@ -142,7 +140,7 @@ private:
               http::ssl_verify_peer{true}, this->auditor()) |
           response_stream;
     } catch (const std::exception &) {
-      std::throw_with_nested(DOCWIRE_MAKE_ERROR("Error during transcription"));
+      std::throw_with_nested(make_error("Error during transcription"));
     }
     return response_stream.str();
   }
@@ -157,11 +155,11 @@ private:
             err.is_object() && err.as_object().contains("message")
                 ? std::string{err.as_object().at("message").as_string().c_str()}
                 : "unknown error";
-        throw DOCWIRE_MAKE_ERROR("OpenRouter API returned an error", message);
+        throw make_error("OpenRouter API returned an error", message);
       }
       return obj.at("text").as_string().c_str();
     } catch (const std::exception &) {
-      std::throw_with_nested(DOCWIRE_MAKE_ERROR(response));
+      std::throw_with_nested(make_error(response));
     }
   }
 
@@ -171,6 +169,6 @@ private:
 };
 
 } // namespace openrouter
-} // namespace docwire
+} // namespace df0
 
-#endif // DOCWIRE_OPENROUTER_TRANSCRIBE_H
+#endif // DF0_OPENROUTER_TRANSCRIBE_H
