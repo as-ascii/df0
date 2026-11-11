@@ -21,7 +21,8 @@ namespace df0 {
 namespace openrouter {
 
 template <typename auditor_type = audit::null_auditor>
-class analyze_data : public task<auditor_type> {
+class analyze_data : public pipeline::transformer_element<analyze_data<auditor_type>>,
+                     public task<auditor_type> {
 public:
   template <audit::stateless_auditor stateless_auditor_type = auditor_type>
   explicit analyze_data(const std::string &api_key,

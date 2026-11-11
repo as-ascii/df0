@@ -40,6 +40,18 @@
 #include "meta_data_exporter.h"
 #include "ocr_parser.h"
 #include "office_formats_parser.h"
+#include "openrouter_analyze_data.h"
+#include "openrouter_classify.h"
+#include "openrouter_detect_sentiment.h"
+#include "openrouter_embed.h"
+#include "openrouter_extract_entities.h"
+#include "openrouter_extract_keywords.h"
+#include "openrouter_find.h"
+#include "openrouter_summarize.h"
+#include "openrouter_task.h"
+#include "openrouter_text_to_speech.h"
+#include "openrouter_transcribe.h"
+#include "openrouter_translate_to.h"
 #include "pipeline/output_element.hpp"
 #include "plain_text_exporter.h"
 #include "post.h"
@@ -72,6 +84,12 @@ static void version()
 }
 
 namespace df0
+{
+	using magic_enum::istream_operators::operator>>;
+	using magic_enum::ostream_operators::operator<<;
+}
+
+namespace df0::openrouter
 {
 	using magic_enum::istream_operators::operator>>;
 	using magic_enum::ostream_operators::operator<<;
@@ -202,6 +220,28 @@ int main(int argc, char* argv[])
 		("local-ai-prompt", po::value<std::string>(), "prompt to process text via local AI model")
 		("local-ai-ct2-embed", po::value<embed_prefix_type>()->implicit_value(embed_prefix_type::none), "generate embedding of text via local AI model. Optional argument selects the prefix type: (e.g. \"passage: \" or \"query: \" or \"none: \").")
 		("local-ai-model", po::value<std::string>(), "path to local AI model data (build-in default model is used if not specified)")
+		("openrouter-chat", po::value<std::string>(), "prompt to process text and images via OpenRouter")
+		("openrouter-extract-entities", "extract entities from text and images via OpenRouter")
+		("openrouter-extract-keywords", po::value<unsigned int>(), "extract N keywords/key phrases from text and images via OpenRouter")
+		("openrouter-summarize", "summarize text and images via OpenRouter")
+		("openrouter-detect-sentiment", "detect sentiment of text and images via OpenRouter")
+		("openrouter-analyze-data", "analyze text and images for important insights and generate conclusions via OpenRouter")
+		("openrouter-classify", po::value<std::vector<std::string>>()->multitoken(), "classify text and images via OpenRouter to one of specified categories")
+		("openrouter-translate-to", po::value<std::string>(), "language to translate text and images to via OpenRouter")
+		("openrouter-find", po::value<std::string>(), "find phrase, object or event in text and images via OpenRouter")
+		("openrouter-text-to-speech", "convert text to speech via OpenRouter")
+		("openrouter-embed", "generate embedding of text via OpenRouter")
+		("openrouter-transcribe", "convert speech to text (transcribe) via OpenRouter")
+		("openrouter-key", po::value<std::string>()->default_value(""), "OpenRouter API key (create one at https://openrouter.ai/keys)")
+		("openrouter-model", po::value<std::string>()->default_value("openrouter/auto"), "OpenRouter model slug for chat-based options, e.g. openai/gpt-5 or anthropic/claude-sonnet-5 (openrouter/auto lets OpenRouter choose)")
+		("openrouter-tts-model", po::value<std::string>()->default_value("openai/gpt-4o-mini-tts-2025-12-15"), "OpenRouter model slug for text-to-speech")
+		("openrouter-tts-response-format", po::value<std::string>()->default_value("mp3"), "audio format produced by text-to-speech, e.g. mp3|opus|aac|flac|wav|pcm")
+		("openrouter-embed-model", po::value<std::string>()->default_value("openai/text-embedding-3-small"), "OpenRouter model slug for embeddings")
+		("openrouter-transcribe-model", po::value<std::string>()->default_value(std::string{openrouter::transcribe_model::whisper_large_v3}), "OpenRouter model slug for transcription, e.g. openai/whisper-large-v3|openai/whisper-1|openai/gpt-4o-transcribe|microsoft/mai-transcribe-1.5|x-ai/grok-stt-1.0")
+		("openrouter-transcribe-language", po::value<std::string>()->default_value(""), "ISO-639-1 language code of the audio for transcription, e.g. en (auto-detect if empty)")
+		("openrouter-voice", po::value<std::string>()->default_value("alloy"), "voice used by text-to-speech")
+		("openrouter-temperature", po::value<float>(), "force specified temperature for OpenRouter prompts")
+		("openrouter-image-detail", po::value<openrouter::image_detail>()->default_value(openrouter::image_detail::automatic), enum_names_str<openrouter::image_detail>().c_str())
 		("language", po::value<std::vector<language>>()->default_value({language::eng}, "eng"), "Set the document language(s) for OCR as ISO 639-3 identifiers like: spa, fra, deu, rus, chi_sim, chi_tra etc. More than 100 languages are supported. Multiple languages can be enabled.")
 		("ocr-confidence-threshold", po::value<float>()->notifier([](float val) {
 			if (val < 0.0f || val > 100.0f) {
@@ -340,6 +380,15 @@ int run_with_auditor(
 		return "use_stream"_v = vm["use-stream"].as<bool>(), "file_name"_v = file_name;
 	});
 
+	const std::string& key = vm["openrouter-key"].as<std::string>();
+	const std::string& model = vm["openrouter-model"].as<std::string>();
+	const float temperature =
+		vm.count("openrouter-temperature")
+			? vm["openrouter-temperature"].as<float>()
+			: 0.0f;
+	const openrouter::image_detail image_detail =
+		vm["openrouter-image-detail"].as<openrouter::image_detail>();
+
 	auto optional_suffix =
 		maybe(vm.count("http-post"), [&] {
 			return http::post<configured_auditor>(
@@ -348,7 +397,101 @@ int run_with_auditor(
 				http::ssl_verify_peer{true},
 				auditor);
 		})
-#ifdef DOCWIRE_LOCAL_AI
+		| maybe(vm.count("openrouter-chat"), [&] {
+			return openrouter::task<configured_auditor>(
+				vm["openrouter-chat"].as<std::string>(),
+				key,
+				model,
+				temperature,
+				image_detail,
+				auditor);
+		})
+		| maybe(vm.count("openrouter-extract-entities"), [&] {
+			return openrouter::extract_entities<configured_auditor>(
+				key,
+				model,
+				temperature,
+				image_detail,
+				auditor);
+		})
+		| maybe(vm.count("openrouter-extract-keywords"), [&] {
+			return openrouter::extract_keywords<configured_auditor>(
+				vm["openrouter-extract-keywords"].as<unsigned int>(),
+				key,
+				model,
+				temperature,
+				image_detail,
+				auditor);
+		})
+		| maybe(vm.count("openrouter-summarize"), [&] {
+			return openrouter::summarize<configured_auditor>(
+				key,
+				model,
+				temperature,
+				image_detail,
+				auditor);
+		})
+		| maybe(vm.count("openrouter-detect-sentiment"), [&] {
+			return openrouter::detect_sentiment<configured_auditor>(
+				key,
+				model,
+				temperature,
+				image_detail,
+				auditor);
+		})
+		| maybe(vm.count("openrouter-analyze-data"), [&] {
+			return openrouter::analyze_data<configured_auditor>(
+				key,
+				model,
+				temperature,
+				image_detail,
+				auditor);
+		})
+		| maybe(vm.count("openrouter-classify"), [&] {
+			const std::vector<std::string>& categories =
+				vm["openrouter-classify"].as<std::vector<std::string>>();
+			std::set<std::string> categories_set(categories.begin(), categories.end());
+			return openrouter::classify<configured_auditor>(
+				categories_set,
+				key,
+				model,
+				temperature,
+				image_detail,
+				auditor);
+		})
+		| maybe(vm.count("openrouter-translate-to"), [&] {
+			return openrouter::translate_to<configured_auditor>(
+				vm["openrouter-translate-to"].as<std::string>(),
+				key,
+				model,
+				temperature,
+				image_detail,
+				auditor);
+		})
+		| maybe(vm.count("openrouter-find"), [&] {
+			return openrouter::find<configured_auditor>(
+				vm["openrouter-find"].as<std::string>(),
+				key,
+				model,
+				temperature,
+				image_detail,
+				auditor);
+		})
+		| maybe(vm.count("openrouter-text-to-speech"), [&] {
+			return openrouter::text_to_speech<configured_auditor>(
+				key,
+				vm["openrouter-tts-model"].as<std::string>(),
+				vm["openrouter-voice"].as<std::string>(),
+				vm["openrouter-tts-response-format"].as<std::string>(),
+				auditor);
+		})
+		| maybe(vm.count("openrouter-embed"), [&] {
+			return openrouter::embed<configured_auditor>(
+				key,
+				vm["openrouter-embed-model"].as<std::string>(),
+				auditor);
+		})
+#ifdef DF0_LOCAL_AI
 		| maybe(vm.count("local-ai-prompt"), [&] {
 			auto runner = create_local_runner(
 				vm,
@@ -407,6 +550,36 @@ int run_with_auditor(
 						<< std::endl;
 				return emit_message(std::move(msg));
 			}};
+
+	if (vm.count("openrouter-transcribe"))
+	{
+		auto pipeline =
+			content_type::detector{}
+			| openrouter::transcribe<configured_auditor>(
+				key,
+				vm["openrouter-transcribe-model"].as<std::string>(),
+				vm["openrouter-transcribe-language"].as<std::string>(),
+				auditor)
+			| plain_text_exporter{}
+			| std::move(optional_suffix);
+
+		try
+		{
+			run_pipeline(std::move(data), pipeline);
+		}
+		catch (const std::exception& e)
+		{
+			std::cerr << "[ERROR] " << errors::diagnostic_message(e)
+				<< "processing file " + file_name << std::endl;
+			return 2;
+		}
+		catch (...)
+		{
+			std::cerr << "[ERROR] Unknown error\nprocessing file " + file_name << std::endl;
+			return 2;
+		}
+		return 0;
+	}
 
 	if (local_processing)
 	{
