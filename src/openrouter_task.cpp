@@ -82,7 +82,7 @@ std::string image_detail_to_string(openrouter::image_detail image_detail) {
   case openrouter::image_detail::automatic:
     return "auto";
   default:
-    throw make_error("Unexpected image detail value", image_detail,
+    throw DF0_MAKE_ERROR("Unexpected image detail value", image_detail,
                      errors::program_logic{});
   }
 }
@@ -132,7 +132,7 @@ std::string post_request(const std::string &query, const std::string &api_key,
                                  auditor) |
         response_stream;
   } catch (const std::exception &e) {
-    std::throw_with_nested(make_error(query));
+    std::throw_with_nested(DF0_MAKE_ERROR(query));
   }
   return response_stream.str();
 }
@@ -149,7 +149,7 @@ std::string parse_response(const std::string &response,
       std::string message = err.contains("message")
                                 ? err.at("message").as_string().c_str()
                                 : "unknown error";
-      throw make_error("OpenRouter API returned an error", message);
+      throw DF0_MAKE_ERROR("OpenRouter API returned an error", message);
     }
     return response_obj["choices"]
         .as_array()[0]
@@ -192,7 +192,7 @@ continuation task<auditor_type>::operator()(
     audit::entry(this->auditor(), [&] { return "base64Encoded"_v = base64Encoded; });
     data_str = std::string{"data:image/*;base64,"} + base64Encoded;
   } else {
-    throw make_error("Unsupported MIME type for OpenRouter Chat",
+    throw DF0_MAKE_ERROR("Unsupported MIME type for OpenRouter Chat",
                      data.highest_confidence_mime_type()->v,
                      errors::program_logic{});
   }

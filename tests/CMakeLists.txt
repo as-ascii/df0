@@ -303,7 +303,7 @@ if(TARGET df0_ai_ct2)
 	    df0_content_type
 	    df0_ai
 	    df0_local_ai
-	    df0_operouter
+	    df0_openrouter
 	    df0_fuzzy_match
 	    df0_http
     )

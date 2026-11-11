@@ -77,15 +77,6 @@ namespace df0
 	using magic_enum::ostream_operators::operator<<;
 }
 
-<<<<<<< HEAD:src/docwire.cpp
-=======
-namespace df0::openai
-{
-	using magic_enum::istream_operators::operator>>;
-	using magic_enum::ostream_operators::operator<<;
-}
-
->>>>>>> master:src/df0.cpp
 using magic_enum::istream_operators::operator>>;
 using magic_enum::ostream_operators::operator<<;
 
@@ -357,98 +348,7 @@ int run_with_auditor(
 				http::ssl_verify_peer{true},
 				auditor);
 		})
-<<<<<<< HEAD:src/docwire.cpp
 #ifdef DOCWIRE_LOCAL_AI
-=======
-		| maybe(vm.count("openai-chat"), [&] {
-			return openai::chat<configured_auditor>(
-				vm["openai-chat"].as<std::string>(),
-				vm["openai-key"].as<std::string>(),
-				vm["openai-model"].as<openai::model>(),
-				vm.count("openai-temperature")
-					? vm["openai-temperature"].as<float>()
-					: 0.0f,
-				vm["openai-image-detail"].as<openai::image_detail>(),
-				auditor);
-		})
-		| maybe(vm.count("openai-extract-entities"), [&] {
-			return openai::extract_entities<configured_auditor>(
-				vm["openai-key"].as<std::string>(),
-				vm["openai-model"].as<openai::model>(),
-				vm.count("openai-temperature")
-					? vm["openai-temperature"].as<float>()
-					: 0.0f,
-				vm["openai-image-detail"].as<openai::image_detail>(),
-				auditor);
-		})
-		| maybe(vm.count("openai-extract-keywords"), [&] {
-			return openai::extract_keywords<configured_auditor>(
-				vm["openai-extract-keywords"].as<unsigned int>(),
-				vm["openai-key"].as<std::string>(),
-				vm["openai-model"].as<openai::model>(),
-				vm.count("openai-temperature")
-					? vm["openai-temperature"].as<float>()
-					: 0.0f,
-				vm["openai-image-detail"].as<openai::image_detail>(),
-				auditor);
-		})
-		| maybe(vm.count("openai-summarize"), [&] {
-			return openai::summarize<configured_auditor>(
-				vm["openai-key"].as<std::string>(),
-				vm["openai-model"].as<openai::model>(),
-				vm.count("openai-temperature")
-					? vm["openai-temperature"].as<float>()
-					: 0.0f,
-				vm["openai-image-detail"].as<openai::image_detail>(),
-				auditor);
-		})
-		| maybe(vm.count("openai-detect-sentiment"), [&] {
-			return openai::detect_sentiment<configured_auditor>(
-				vm["openai-key"].as<std::string>(),
-				vm["openai-model"].as<openai::model>(),
-				vm.count("openai-temperature")
-					? vm["openai-temperature"].as<float>()
-					: 0.0f,
-				vm["openai-image-detail"].as<openai::image_detail>(),
-				auditor);
-		})
-		| maybe(vm.count("openai-analyze-data"), [&] {
-			return openai::analyze_data<configured_auditor>(
-				vm["openai-key"].as<std::string>(),
-				vm["openai-model"].as<openai::model>(),
-				vm.count("openai-temperature")
-					? vm["openai-temperature"].as<float>()
-					: 0.0f,
-				vm["openai-image-detail"].as<openai::image_detail>(),
-				auditor);
-		})
-		| maybe(vm.count("openai-classify"), [&] {
-			const std::vector<std::string>& categories =
-				vm["openai-classify"].as<std::vector<std::string>>();
-			std::set<std::string> categories_set(categories.begin(), categories.end());
-			return openai::classify<configured_auditor>(
-				categories_set,
-				vm["openai-key"].as<std::string>(),
-				vm["openai-model"].as<openai::model>(),
-				vm.count("openai-temperature")
-					? vm["openai-temperature"].as<float>()
-					: 0.0f,
-				vm["openai-image-detail"].as<openai::image_detail>(),
-				auditor);
-		})
-		| maybe(vm.count("openai-translate-to"), [&] {
-			return openai::translate_to<configured_auditor>(
-				vm["openai-translate-to"].as<std::string>(),
-				vm["openai-key"].as<std::string>(),
-				vm["openai-model"].as<openai::model>(),
-				vm.count("openai-temperature")
-					? vm["openai-temperature"].as<float>()
-					: 0.0f,
-				vm["openai-image-detail"].as<openai::image_detail>(),
-				auditor);
-		})
-#ifdef DF0_LOCAL_AI
->>>>>>> master:src/df0.cpp
 		| maybe(vm.count("local-ai-prompt"), [&] {
 			auto runner = create_local_runner(
 				vm,

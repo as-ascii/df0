@@ -100,7 +100,7 @@ private:
                                    this->auditor()) |
           response_stream;
     } catch (const std::exception &e) {
-      std::throw_with_nested(make_error(query));
+      std::throw_with_nested(DF0_MAKE_ERROR(query));
     }
     return response_stream.str();
   }

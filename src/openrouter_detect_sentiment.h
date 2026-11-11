@@ -19,7 +19,7 @@
 
 namespace df0
 {
-namespace openai
+namespace openrouter
 {
 
 template <typename auditor_type = audit::null_auditor>
