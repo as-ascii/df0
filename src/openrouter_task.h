@@ -49,21 +49,22 @@ public:
    * "anthropic/claude-sonnet-5". Defaults to "openrouter/auto", which lets
    * OpenRouter choose the model.
    * @param temperature Sampling temperature.
+   * @param allow_truncated If false (default), a response cut off by the output.
    * @param image_detail Vision hint forwarded to models that support image
    * input.
    */
   template <audit::stateless_auditor stateless_auditor_type = auditor_type>
   task(const std::string &system_message, const std::string &api_key,
        const std::string &model = "openrouter/auto", float temperature = 0.5,
-       image_detail image_detail = image_detail::automatic)
+       image_detail image_detail = image_detail::automatic, bool allow_truncated = false)
       : task(system_message, api_key, model, temperature, image_detail,
-             audit::auditor_ref<stateless_auditor_type>{}) {}
+             audit::auditor_ref<stateless_auditor_type>{}, allow_truncated) {}
 
   /// Constructs the component with an explicitly injected auditor.
   explicit task(const std::string &system_message, const std::string &api_key,
                 const std::string &model, float temperature,
                 image_detail image_detail,
-                audit::auditor_ref<auditor_type> auditor);
+                audit::auditor_ref<auditor_type> auditor, bool allow_truncated = false);
 
   /**
    * @brief Executes transform operation for given node data.
@@ -81,8 +82,12 @@ private:
 };
 
 // Deduction guide for CTAD
+
 task(const std::string &, const std::string &, const std::string &, float,
      image_detail) -> task<audit::null_auditor>;
+
+task(const std::string &, const std::string &, const std::string &, float,
+     image_detail, bool) -> task<audit::null_auditor>;
 
 } // namespace openrouter
 } // namespace df0

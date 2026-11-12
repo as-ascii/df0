@@ -1187,7 +1187,6 @@ Generate embedding of document using OpenRouter for advanced AI applications lik
 ```bash
 df0 --openrouter-key <key> --openrouter-embed data_processing_definition.doc
 ```
-```
 
 Happy Document Processing with DF-0 CLI!
 

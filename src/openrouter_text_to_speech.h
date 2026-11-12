@@ -64,7 +64,7 @@ public:
     std::string data_str = data.string();
     std::string content = post_request(
         prepare_query(data_str, m_model, m_voice, m_response_format));
-    return emit_message(data_source{content});
+    return emit_message(data_source{std::move(content), file_extension{"." + m_response_format}});
   }
 
 protected:

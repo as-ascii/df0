@@ -120,7 +120,7 @@ private:
       std::vector<double> embedding;
       embedding.reserve(embedding_array.size());
       for (const auto &val : embedding_array)
-        embedding.push_back(val.as_double());
+        embedding.push_back(val.to_number<double>());
       return embedding;
     } catch (const std::exception &e) {
       std::throw_with_nested(DF0_MAKE_ERROR(response));
