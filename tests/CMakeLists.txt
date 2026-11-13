@@ -213,6 +213,7 @@ set(common_examples
     openrouter_translate
     openrouter_sentiment
     openrouter_transcribe
+    openrouter_text_to_speech
     openrouter_find_image
     openrouter_embedding
     reuse_chain

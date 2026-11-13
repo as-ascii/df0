@@ -33,16 +33,6 @@
 namespace df0 {
 namespace openrouter {
 
-namespace transcribe_model {
-inline constexpr std::string_view whisper_large_v3 = "openai/whisper-large-v3";
-inline constexpr std::string_view whisper_1 = "openai/whisper-1";
-inline constexpr std::string_view gpt_4o_transcribe =
-    "openai/gpt-4o-transcribe";
-inline constexpr std::string_view mai_transcribe_1_5 =
-    "microsoft/mai-transcribe-1.5";
-inline constexpr std::string_view grok_stt_1_0 = "x-ai/grok-stt-1.0";
-} // namespace transcribe_model
-
 template <typename auditor_type = audit::null_auditor>
 class transcribe
     : public pipeline::transformer_element<transcribe<auditor_type>>,
@@ -57,7 +47,7 @@ public:
   template <audit::stateless_auditor stateless_auditor_type = auditor_type>
   explicit transcribe(
       std::string api_key,
-      std::string model = std::string{transcribe_model::whisper_large_v3},
+      std::string model,
       std::string language = "")
       : transcribe(std::move(api_key), std::move(model), std::move(language),
                    audit::auditor_ref<stateless_auditor_type>{}) {}

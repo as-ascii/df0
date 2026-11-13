@@ -177,7 +177,7 @@ Additionally, the SDK provides functionality to convert a MIME type back to a fi
     - transcribe: Convert spoken language (voice) into written text (transcription, Automatic Speech Recognition).
     - embed: Generate embedding of text via OpenRouter.
 
-   Models are selected by OpenRouter slug, for example `openai/gpt-5` or `anthropic/claude-sonnet-5`. The default for chat-based transformers is `openrouter/auto`, which lets OpenRouter choose the model. Built-in transcribe model constants are available in `openrouter::transcribe_model` (`openai/whisper-large-v3`, `openai/whisper-1`, `openai/gpt-4o-transcribe`, `microsoft/mai-transcribe-1.5`, `x-ai/grok-stt-1.0`). The default TTS model is `openai/gpt-4o-mini-tts-2025-12-15` and the default embedding model is `openai/text-embedding-3-small`. Cloud integrations remain opt-in and do not change the local-first core behavior. An API key can be created at https://openrouter.ai/keys.
+   Models are selected by OpenRouter slug, for example `openai/gpt-5` or `anthropic/claude-sonnet-5`. The default for chat-based transformers is `openrouter/auto`, which lets OpenRouter choose the model. Built-in transcribe model constants are available in `openrouter::transcribe_model` (`openai/whisper-large-v3`, `openai/whisper-1`, `openai/gpt-4o-transcribe`, `microsoft/mai-transcribe-1.5`, `x-ai/grok-stt-1.0`). Text to speech (`text_to_speech`), transcription (`transcribe`) and embeddings (`embed`) have no router alias like `openrouter/auto`, and the available models and voices change over time, so you must specify the model explicitly (and the voice for text to speech). Current models can be listed with the [OpenRouter models API](https://openrouter.ai/docs/api/api-reference/models/list-all-models-and-their-properties), for example `https://openrouter.ai/api/v1/models?output_modalities=speech`. Cloud integrations remain opt-in and do not change the local-first core behavior. An API key can be created at https://openrouter.ai/keys.
 - **Incremental parsing** returning data as soon as they are available
 
 - **Structured Content Extraction**: DF-0 excels in transforming unstructured documents into structured content. By breaking down documents into discernible elements such as titles, paragraphs, list items, tables, and metadata, the SDK facilitates a granular level of control over the data extraction process. This feature is particularly beneficial for developers working with NLP and LLM models, as it allows them to selectively retain content that is most relevant to their application. For instance, when training a summarization model, users may opt to focus solely on narrative text, excluding headers, footers, and other non-essential elements. The SDK's structured content extraction capability ensures that the integrity and context of the document are preserved, enabling more accurate and meaningful interactions with AI-driven projects.
@@ -467,10 +467,18 @@ ensure(fuzzy_match::ratio(out_stream.str(), "Data processing is the collection, 
 Convert a voice recording (e.g. mp3 file) to text using OpenRouter:
 
 ```cpp
-std::filesystem::path("data_processing_definition.mp3") | openrouter::transcribe(...) | plain_text_exporter() | out_stream;
+std::filesystem::path("data_processing_definition.mp3") | openrouter::transcribe(..., "openai/whisper-large-v3") | plain_text_exporter() | out_stream;
 ensure(fuzzy_match::ratio(out_stream.str(), "Data processing involves converting raw data...")) > 50;
 ```
 [Full example](https://docs.df0.io/en/latest/openrouter_transcribe_8cpp-example.html)
+
+Convert text to speech using OpenRouter. The model and voice must be specified (voices are model-specific, see the `supported_voices` field of the OpenRouter models API):
+
+```cpp
+data_source{text, mime_type{"text/plain"}, confidence::highest} | openrouter::text_to_speech(..., "x-ai/grok-voice-tts-1.0", "eve", "mp3") | out_stream;
+ensure(out_stream.str().size()) > 1000;
+```
+[Full example](https://docs.df0.io/en/latest/openrouter_text_to_speech_8cpp-example.html)
 
 Find phrases, objects and events with smart matching in documents in any format (Office, PDF, mail, etc) using built-in local AI model:
 
@@ -492,7 +500,7 @@ ensure(fuzzy_match::ratio(out_stream.str(), "2\n- A tree is located on the left 
 Create embedding for document in any format (Office, PDF, mail, etc) using OpenRouter:
 
 ```cpp
-std::filesystem::path("data_processing_definition.doc") | ... | openrouter::embed(...) | out_msgs;
+std::filesystem::path("data_processing_definition.doc") | ... | openrouter::embed(..., "openai/text-embedding-3-small") | out_msgs;
 ...
 ensure(out_msgs[0]->is<ai::embedding>()) == true;
 ensure(out_msgs[0]->get<ai::embedding>().values.size()) == 1536;
@@ -1071,11 +1079,11 @@ Process data securely using offline AI models with the following options:
 - **&ndash;&ndash;openrouter-model <model>** (default: openrouter/auto): OpenRouter model slug used by the chat-based options, e.g. openai/gpt-5 or anthropic/claude-sonnet-5. The default `openrouter/auto` lets OpenRouter choose the model.
 - **&ndash;&ndash;openrouter-temperature <temp>** (default: 0): Force specified temperature for OpenRouter prompts.
 - **&ndash;&ndash;openrouter-image-detail <detail>** (default: automatic): Force specified image detail parameter for OpenRouter image prompts. Available options are: low, high and automatic.
-- **&ndash;&ndash;openrouter-tts-model <model>** (default: openai/gpt-4o-mini-tts-2025-12-15): OpenRouter model slug for text to speech.
-- **&ndash;&ndash;openrouter-tts-response-format <format>** (default: mp3): Audio format produced by text to speech, e.g. mp3, opus, aac, flac, wav, pcm.
-- **&ndash;&ndash;openrouter-voice <voice>** (default: alloy): Choose voice for text to speech conversion.
-- **&ndash;&ndash;openrouter-embed-model <model>** (default: openai/text-embedding-3-small): OpenRouter model slug for embeddings.
-- **&ndash;&ndash;openrouter-transcribe-model <model>** (default: openai/whisper-large-v3): OpenRouter model slug for transcription, e.g. openai/whisper-1, openai/gpt-4o-transcribe, microsoft/mai-transcribe-1.5, x-ai/grok-stt-1.0.
+- **&ndash;&ndash;openrouter-tts-model <model>** (required with `--openrouter-text-to-speech`): OpenRouter model slug for text to speech, e.g. x-ai/grok-voice-tts-1.0. List current speech models with `curl "https://openrouter.ai/api/v1/models?output_modalities=speech"`.
+- **&ndash;&ndash;openrouter-tts-response-format <format>** (default: mp3): Audio format produced by text to speech, e.g. mp3 or pcm (supported formats vary by model).
+- **&ndash;&ndash;openrouter-voice <voice>** (required with `--openrouter-text-to-speech`): Voice for text to speech conversion. Voices are model-specific; see the `supported_voices` field of the models API (e.g. eve for x-ai/grok-voice-tts-1.0).
+- **&ndash;&ndash;openrouter-embed-model <model>** (required with `--openrouter-embed`): OpenRouter model slug for embeddings, e.g. openai/text-embedding-3-small.
+- **&ndash;&ndash;openrouter-transcribe-model <model>** (required with `--openrouter-transcribe`): OpenRouter model slug for transcription, e.g. openai/whisper-large-v3 or openai/whisper-1.
 - **&ndash;&ndash;openrouter-transcribe-language <code>** (default: auto-detect): ISO 639-1 language code of the audio, e.g. en.
 
 ### Additional Options
@@ -1158,7 +1166,7 @@ df0 --openrouter-key <key> --openrouter-model anthropic/claude-sonnet-5 --openro
 Summarize your document using an LLM, convert summary to audio using TTS model and read it loud:
 
 ```bash
-df0 document.doc --openrouter-key <key> --openrouter-summarize --openrouter-text-to-speech | ffplay -nodisp -autoexit -
+df0 document.doc --openrouter-key <key> --openrouter-summarize --openrouter-text-to-speech --openrouter-tts-model x-ai/grok-voice-tts-1.0 --openrouter-voice eve | ffplay -nodisp -autoexit -
 ```
 
 #### Searching for objects or events in image or photo
@@ -1176,8 +1184,8 @@ df0 --openrouter-key <key> --openrouter-find running --local-processing=off imag
 Transcribe a voice recording (e.g. mp3 file with meeting recording):
 
 ```bash
-df0 --openrouter-key <key> --openrouter-transcribe meeting.mp3
-df0 --openrouter-key <key> --openrouter-transcribe-language en --openrouter-transcribe meeting.mp3
+df0 --openrouter-key <key> --openrouter-transcribe-model openai/whisper-large-v3 --openrouter-transcribe meeting.mp3
+df0 --openrouter-key <key> --openrouter-transcribe-model openai/whisper-large-v3 --openrouter-transcribe-language en --openrouter-transcribe meeting.mp3
 ```
 
 #### Embeddings generation for advanced AI applications
@@ -1185,7 +1193,7 @@ df0 --openrouter-key <key> --openrouter-transcribe-language en --openrouter-tran
 Generate embedding of document using OpenRouter for advanced AI applications like Retrieval Augmented Generation (RAG), semantic search, and document clustering.
 
 ```bash
-df0 --openrouter-key <key> --openrouter-embed data_processing_definition.doc
+df0 --openrouter-key <key> --openrouter-embed-model openai/text-embedding-3-small --openrouter-embed data_processing_definition.doc
 ```
 
 Happy Document Processing with DF-0 CLI!

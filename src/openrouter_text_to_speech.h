@@ -36,8 +36,8 @@ public:
   template <audit::stateless_auditor stateless_auditor_type = auditor_type>
   explicit text_to_speech(
       const std::string &api_key,
-      const std::string &model = "openai/gpt-4o-mini-tts-2025-12-15",
-      const std::string &voice = "alloy",
+      const std::string &model,
+      const std::string &voice,
       const std::string &response_format = "mp3")
       : text_to_speech(api_key, model, voice, response_format,
                        audit::auditor_ref<stateless_auditor_type>{}) {}

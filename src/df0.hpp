@@ -161,6 +161,11 @@
 */
 
 /**
+ * @example openrouter_text_to_speech.cpp
+ * This example shows how to convert text to speech (an mp3 audio stream) using the OpenRouter API.
+*/
+
+/**
  * @example local_ai_find.cpp
  * This example demonstrates how to find a specific sentence in a document using a built-in local AI model.
 */

@@ -25,6 +25,7 @@
 #include "ai_elements.h"
 #include <boost/program_options.hpp>
 #include <functional>
+#include <initializer_list>
 #include <memory>
 #include <fstream>
 #include "content_type.h"
@@ -204,6 +205,30 @@ int run_with_auditor(
 	data_source data,
 	audit::auditor_ref<auditor_type> auditor);
 
+static bool check_required_options(
+	const boost::program_options::variables_map& vm,
+	const char* feature,
+	std::initializer_list<const char*> required,
+	const char* where_to_look)
+{
+	if (!vm.count(feature))
+		return true;
+	std::string missing;
+	for (const char* option : required)
+	{
+		if (vm.count(option))
+			continue;
+		if (!missing.empty())
+			missing += " and ";
+		missing += std::string{"--"} + option;
+	}
+	if (missing.empty())
+		return true;
+	std::cerr << "Error: --" << feature << " requires " << missing << ".\n"
+	          << where_to_look << std::endl;
+	return false;
+}
+
 int main(int argc, char* argv[])
 {
 	bool local_processing;
@@ -234,12 +259,12 @@ int main(int argc, char* argv[])
 		("openrouter-transcribe", "convert speech to text (transcribe) via OpenRouter")
 		("openrouter-key", po::value<std::string>()->default_value(""), "OpenRouter API key (create one at https://openrouter.ai/keys)")
 		("openrouter-model", po::value<std::string>()->default_value("openrouter/auto"), "OpenRouter model slug for chat-based options, e.g. openai/gpt-5 or anthropic/claude-sonnet-5 (openrouter/auto lets OpenRouter choose)")
-		("openrouter-tts-model", po::value<std::string>()->default_value("openai/gpt-4o-mini-tts-2025-12-15"), "OpenRouter model slug for text-to-speech")
+		("openrouter-tts-model", po::value<std::string>(), "OpenRouter model slug for text-to-speech (required with --openrouter-text-to-speech), e.g. x-ai/grok-voice-tts-1.0")
 		("openrouter-tts-response-format", po::value<std::string>()->default_value("mp3"), "audio format produced by text-to-speech, e.g. mp3|pcm")
-		("openrouter-embed-model", po::value<std::string>()->default_value("openai/text-embedding-3-small"), "OpenRouter model slug for embeddings")
-		("openrouter-transcribe-model", po::value<std::string>()->default_value(std::string{openrouter::transcribe_model::whisper_large_v3}), "OpenRouter model slug for transcription, e.g. openai/whisper-large-v3|openai/whisper-1|openai/gpt-4o-transcribe|microsoft/mai-transcribe-1.5|x-ai/grok-stt-1.0")
+		("openrouter-embed-model", po::value<std::string>(), "OpenRouter model slug for embeddings (required with --openrouter-embed), e.g. openai/text-embedding-3-small")
+		("openrouter-transcribe-model", po::value<std::string>(), "OpenRouter model slug for transcription (required with --openrouter-transcribe), e.g. openai/whisper-large-v3")
 		("openrouter-transcribe-language", po::value<std::string>()->default_value(""), "ISO-639-1 language code of the audio for transcription, e.g. en (auto-detect if empty)")
-		("openrouter-voice", po::value<std::string>()->default_value("alloy"), "voice used by text-to-speech")
+		("openrouter-voice", po::value<std::string>(), "voice used by text-to-speech (required with --openrouter-text-to-speech; voices are model-specific)")
 		("openrouter-temperature", po::value<float>(), "force specified temperature for OpenRouter prompts")
 		("openrouter-image-detail", po::value<openrouter::image_detail>()->default_value(openrouter::image_detail::automatic), enum_names_str<openrouter::image_detail>().c_str())
 		("language", po::value<std::vector<language>>()->default_value({language::eng}, "eng"), "Set the document language(s) for OCR as ISO 639-3 identifiers like: spa, fra, deu, rus, chi_sim, chi_tra etc. More than 100 languages are supported. Multiple languages can be enabled.")
@@ -297,6 +322,18 @@ int main(int argc, char* argv[])
 		std::cerr << "Error: " << e.what() << std::endl;
 		return 1;
 	}
+
+	if (!check_required_options(vm, "openrouter-text-to-speech",
+			{"openrouter-tts-model", "openrouter-voice"},
+			"List speech models and their voices (supported_voices) with:\n"
+			"  curl \"https://openrouter.ai/api/v1/models?output_modalities=speech\"")
+		|| !check_required_options(vm, "openrouter-embed",
+			{"openrouter-embed-model"},
+			"See embedding models at https://openrouter.ai/collections/embedding-models")
+		|| !check_required_options(vm, "openrouter-transcribe",
+			{"openrouter-transcribe-model"},
+			"See transcription models at https://openrouter.ai/collections/speech-to-text-models"))
+		return 1;
 
 	std::string file_name = vm["input-file"].as<std::string>();
 

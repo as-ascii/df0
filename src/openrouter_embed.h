@@ -36,10 +36,16 @@ template <typename auditor_type = audit::null_auditor>
 class embed : public pipeline::transformer_element<embed<auditor_type>>,
               private audit::with_auditor<auditor_type> {
 public:
-
+/**
+   * @param api_key OpenRouter API key. Never written to audit output.
+   * @param model OpenRouter embedding model slug (required), e.g.
+   * "openai/text-embedding-3-small". OpenRouter has no router alias for
+   * embeddings and the catalog changes over time; see
+   * https://openrouter.ai/collections/embedding-models
+ */
   template <audit::stateless_auditor stateless_auditor_type = auditor_type>
   explicit embed(const std::string &api_key,
-                 const std::string &model = "openai/text-embedding-3-small")
+                 const std::string &model)
       : embed(api_key, model, audit::auditor_ref<stateless_auditor_type>{}) {}
 
   explicit embed(const std::string &api_key, const std::string &model,

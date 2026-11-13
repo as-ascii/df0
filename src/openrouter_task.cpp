@@ -251,8 +251,6 @@ task<auditor_type>::operator()(message_ptr msg,
     user_msg_type = openrouter::user_msg_type::image_url;
     std::span<const std::byte> input_data = data.span();
     std::string base64Encoded = base64::encode(input_data);
-    audit::entry(this->auditor(),
-                 [&] { return "base64Encoded"_v = base64Encoded; });
     data_str = std::string{"data:image/*;base64,"} + base64Encoded;
   } else {
     throw DF0_MAKE_ERROR("Unsupported MIME type for OpenRouter Chat",
